@@ -1,8 +1,12 @@
 module Network where
 
+import Color
+
+import Graphics.Element exposing (Element)
+
 import Graphics.Collage as GC
 
-import Graph as G exposing (Graph, Node, Edge)
+import Graph exposing (Graph, Node, Edge)
 
 type alias Point = { x : Float, y : Float }
 
@@ -26,7 +30,7 @@ dist x y = sqrt (x^2 + y^2)
 example : Network
 example =
   let points = List.map (uncurry Point) [
-       (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0), (2.0,2.0)
+       (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0), (2.25,2.0)
       ]
       nodes = List.map2 Node [1..7] points
       edge from to distance = Edge to from (Road distance [])
@@ -44,11 +48,31 @@ example =
   in
   Graph.fromNodesAndEdges nodes edges
 
+roadStyle : GC.LineStyle
+roadStyle = let def = GC.defaultLine in
+            { def | width <- size * 10, cap <- GC.Round }
+
+lineStyle : GC.LineStyle
+lineStyle = let def = GC.defaultLine in
+            { def | width <- size / 2, cap <- GC.Round,
+                             color <- Color.yellow, dashing <- [8 * round size, 4 * round size] }
+
+size : Float
+size = 2.5
+
 render : Network -> Element
 render net =
   let
-    edgeNodePairs = map (\e -> G.get e.from net, G.get e.to net) G.edges net
-    edgeLines = map (\(n1, n2) -> GC.segment (n1.x, n1.y) (n2.x, n2.y) ) edgeNodePairs
-                  |> GC.traced GC.defaultLine
+    getPair edge = case (Graph.get edge.from net, Graph.get edge.to net) of
+                     (Just x, Just y) -> Just (x.node.label, y.node.label)
+                     _                -> Nothing
+    edgeNodePairs = Graph.edges net |> List.filterMap getPair
+    edgeLines = List.map (\ (n1, n2) -> GC.segment (size * 50 * n1.x, size * 50 * n1.y) (size * 50 * n2.x, size * 50 * n2.y)) edgeNodePairs
   in
-    GC.collage 100 100 edgeLines
+    let roads = List.map (GC.traced roadStyle) edgeLines
+        lines = List.map (GC.traced lineStyle) edgeLines
+    in
+    GC.collage 1500 1500 <| roads ++ lines
+
+main : Element
+main = render example

@@ -13,7 +13,7 @@ update action oldModel = oldModel
 
 view : Address Action -> Model -> Html
 view address model = Html.fromElement <|
-    G.flow G.down [title, mainGamePane]
+    G.flow G.down [title, mainGamePane, clock]
 
 
 title : G.Element
@@ -21,6 +21,9 @@ title = G.show "Transit Bureaucrat"
 
 mainGamePane : G.Element
 mainGamePane = G.show "main pane"
+
+clock: G.Element
+clock = G.show "clock"
 
 main = start
         { model = { numCars = 0 }, update = update, view = view }

@@ -1,0 +1,8 @@
+Install elm via nodejs, set your path to ~/node_modules/elm/bin
+
+Run elm-reactor with the ELM_HOME env variable explicitly set
+i.e.
+
+$ ELM_HOME=$ELM_HOME elm-reactor
+
+(I don't know why that is necessary)

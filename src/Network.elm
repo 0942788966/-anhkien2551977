@@ -1,6 +1,8 @@
 module Network where
 
-import Graph exposing (Graph, Node, Edge)
+import Graphics.Collage as GC
+
+import Graph as G exposing (Graph, Node, Edge)
 
 type alias Point = { x : Float, y : Float }
 
@@ -41,3 +43,10 @@ example =
       ]
   in
   Graph.fromNodesAndEdges nodes edges
+
+render : Network -> Element
+render net =
+  let
+    edgeNodePairs = map (\e -> G.get e.from net, G.get e.to net) G.edges net
+    edgeLines = 
+  in

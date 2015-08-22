@@ -36,16 +36,23 @@ view address model = case model.screen of
                 Html.button [ onClick address (GoToScreen <| MessageScreen 0) ] [Html.text "New Game" ],
                 Html.button [ onClick address (GoToScreen ChooseLevelScreen) ] [Html.text "Continue" ]
             ]
-    ChooseLevelScreen -> renderChooseLevel model
+    ChooseLevelScreen -> renderChooseLevel address model
     MessageScreen n -> renderMessageScreen n address
-    LevelScreen n -> renderLevel n model
+    LevelScreen n -> renderLevel n address model
 
-renderChooseLevel : Model -> Html
-renderChooseLevel model = Html.div [] [ Html.text "Choose a level" ]
+renderChooseLevel : Address Action -> Model -> Html
+renderChooseLevel address model = Html.div []
+        [ Html.text "Choose a level" ,
+          Html.button [onClick address (GoToScreen TitleScreen)] [Html.text "Return to title"]
+        ]
 
-renderLevel : Int -> Model -> Html
-renderLevel levelNum model = 
-    Html.fromElement <| G.flow G.down [title, mainGamePane, clock]
+renderLevel : Int -> Address Action -> Model -> Html
+renderLevel levelNum address model = 
+    Html.div []
+    [
+        Html.fromElement <| G.flow G.down [title, mainGamePane, clock],
+        Html.button [ onClick address (GoToScreen TitleScreen) ] [Html.text "Return to title"]
+    ]
 
 renderMessageScreen : Int -> Address Action -> Html
 renderMessageScreen n address = case Array.get n emailTexts of

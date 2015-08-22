@@ -60,6 +60,9 @@ lineStyle = let def = GC.defaultLine in
 size : Float
 size = 2.5
 
+loc : Point -> (Float, Float)
+loc n = (size * 50 * n.x, size * 50 * n.y)
+
 render : Network -> Element
 render net =
   let
@@ -67,7 +70,7 @@ render net =
                      (Just x, Just y) -> Just (x.node.label, y.node.label)
                      _                -> Nothing
     edgeNodePairs = Graph.edges net |> List.filterMap getPair
-    edgeLines = List.map (\ (n1, n2) -> GC.segment (size * 50 * n1.x, size * 50 * n1.y) (size * 50 * n2.x, size * 50 * n2.y)) edgeNodePairs
+    edgeLines = List.map (\ (n1, n2) -> GC.segment (loc n1) (loc n2)) edgeNodePairs
   in
     let roads = List.map (GC.traced roadStyle) edgeLines
         lines = List.map (GC.traced lineStyle) edgeLines

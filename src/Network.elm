@@ -48,5 +48,7 @@ render : Network -> Element
 render net =
   let
     edgeNodePairs = map (\e -> G.get e.from net, G.get e.to net) G.edges net
-    edgeLines = 
+    edgeLines = map (\(n1, n2) -> GC.segment (n1.x, n1.y) (n2.x, n2.y) ) edgeNodePairs
+                  |> GC.traced GC.defaultLine
   in
+    GC.collage 100 100 edgeLines

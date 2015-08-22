@@ -6,7 +6,7 @@ import Graphics.Element as G
 import Text as T
 import Color
 
-type ScreenState = TitleScreen | LevelScreen Int
+type ScreenState = TitleScreen | ChooseLevelScreen | LevelScreen Int 
 
 type alias Model = { numCars: Int, screen: ScreenState }
 
@@ -20,22 +20,30 @@ type Action = ClickNewGame
 update : Action -> Model -> Model
 update action oldModel =  case action of
     ClickNewGame -> { oldModel | screen <- LevelScreen 1 }
+    ClickContinue -> { oldModel | screen <- ChooseLevelScreen }
     _ -> oldModel
 
 view : Address Action -> Model -> Html
 view address model = case model.screen of
     TitleScreen -> 
-        Html.div []
-            [ Html.fromElement <| titleView,
-              Html.button [ onClick address ClickNewGame] [Html.text "New Game" ],
-              Html.button [ onClick address ClickContinue] [Html.text "Continue" ]
+        let
+            titleBackgroundColor = Color.rgb 94 5 135
+            titleImage = G.image 800 600 "../game_logo.png"
+        in
+            Html.div []
+            [   Html.fromElement <| titleImage,
+                Html.button [ onClick address ClickNewGame] [Html.text "New Game" ],
+                Html.button [ onClick address ClickContinue] [Html.text "Continue" ]
             ]
-    _ -> Html.fromElement <| G.flow G.down [title, mainGamePane, clock]
+    ChooseLevelScreen -> renderChooseLevel model
+    LevelScreen n -> renderLevel n model
 
-titleBackgroundColor = Color.rgb 94 5 135
+renderChooseLevel : Model -> Html
+renderChooseLevel model = Html.div [] [ Html.text "Choose a level" ]
 
-titleView : G.Element
-titleView = G.image 800 600 "../game_logo.png"
+renderLevel : Int -> Model -> Html
+renderLevel levelNum model = 
+    Html.fromElement <| G.flow G.down [title, mainGamePane, clock]
 
 title : G.Element
 title = G.show "Transit Bureaucrat"

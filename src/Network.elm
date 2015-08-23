@@ -54,7 +54,7 @@ example =
       nodes = List.map2 Node [1..7] points
       edge from to distance agents = Edge from to (Road distance agents)
       edges = [
-       edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.07}],
+       edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.06}],
        edge 2 4 1.0 [],
        edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
@@ -97,6 +97,9 @@ medianStyle = let def = GC.defaultLine in
 size : Float
 size = 2.5
 
+padding : Float
+padding = 0.1
+
 loc : Point -> (Float, Float)
 loc n = (size * 50 * n.x, size * 50 * n.y)
 
@@ -118,24 +121,34 @@ render net =
   in
     GC.collage 800 800 <| roads ++ lines ++ agents
 
-translate : Agent -> Agent
-translate agent = { agent | travelled <- agent.travelled + agent.speed }
+translate : Agent -> Float -> Agent
+translate agent maxTravelled =
+  let limit = maxTravelled - padding in
+  { agent | travelled <- min (agent.travelled + agent.speed) limit }
 
 changeEdge : Agent -> NodeId -> NodeId
 changeEdge agent nid = case agent.kind of
                          Bus route -> IntDict.get nid route |> getOrFail ("Bus can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route))
 
+moveAgent ctx from road agent maxTravelled =
+  let moved = translate agent maxTravelled
+  in
+    if moved.travelled > road.length - padding
+    then ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- 0.0 })
+    else ((from, ctx.node.id), moved)
+
 moveAgents : NodeContext Point Road -> List ((NodeId, NodeId), Agent)
 moveAgents ctx =
-  let moveAgent from road agent =
-        let moved = translate agent
-        in
-          if moved.travelled > road.length
-          then ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- 0.0 })
-          else ((from, ctx.node.id), moved)
+  let moveRoad (from, road) =
+    let go agent calculated =
+      let onEdge = List.filter (\ ((f, _), _) -> f == from) calculated |> List.map snd
+          max = (Maybe.withDefault (1/0) <| List.maximum <| List.map .travelled onEdge) |> Debug.watch "max"
+      in
+      moveAgent ctx from road agent max :: calculated
+    in
+    List.foldl go [] road.agents
   in
-    IntDict.toList ctx.incoming |> List.concatMap (\ (from, road) ->
-                                                     List.map (moveAgent from road) road.agents)
+  IntDict.toList ctx.incoming |> List.concatMap moveRoad
 
 updateContext : NodeContext Point Road -> (List (Edge Road), List (Edge Road))
 updateContext ctx =

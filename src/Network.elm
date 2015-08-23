@@ -134,8 +134,9 @@ changeEdge agent nid = case agent.kind of
 moveAgent ctx from road agent maxTravelled =
   let moved = translate agent maxTravelled
   in
-    if moved.travelled > road.length - padding
-    then ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- 0.0 })
+    if moved.travelled > road.length
+    then let remainder = moved.travelled - road.length in
+         ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- remainder })
     else ((from, ctx.node.id), moved)
 
 moveAgents : NodeContext Point Road -> List ((NodeId, NodeId), Agent)
@@ -171,7 +172,7 @@ update : Network -> Network
 update net =
   let go ctx (ins, outs) = let (in', out') = updateContext ctx in (ins ++ in', outs ++ out')
       (ins, outs) = Graph.fold go ([], []) net
-
+      -- TODO: find collisions at corners as an extra pass through outs
       mergedEdges = let intsToInt x y = 2^x * 3^y
                         insDict = IntDict.fromList <| List.map (\e -> (intsToInt e.from e.to, e)) ins
                         outDict = IntDict.fromList <| List.map (\e -> (intsToInt e.from e.to, e)) outs

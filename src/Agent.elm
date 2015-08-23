@@ -8,8 +8,10 @@ import Helpers exposing (..)
 
 translate : Agent -> Float -> Agent
 translate agent maxTravelled =
-  let limit = maxTravelled in
-  { agent | travelled <- min (agent.travelled + agent.speed) limit }
+  let limit = maxTravelled 
+      newPos = min (agent.travelled + agent.speed) limit
+  in
+    { agent | travelled <- newPos, totalDist <- agent.totalDist + (newPos - agent.travelled) }
 
 changeEdge : Agent -> NodeId -> NodeId
 changeEdge agent nid = 

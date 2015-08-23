@@ -1,9 +1,10 @@
 module Network where
 
 import Color exposing (Color)
+import Dict
 import Graphics.Element exposing (Element)
 import Signal exposing (foldp)
-import Time exposing (fps)
+import Time
 import Debug
 
 import IntDict exposing (IntDict)
@@ -13,6 +14,8 @@ import Types exposing (..)
 import Helpers exposing (..)
 import RenderNetwork exposing (render)
 import Agent
+
+fps = 30
 
 example : Network
 example =
@@ -27,7 +30,7 @@ example =
         node 1 (0.0, 0.0) Intersection,
         node 2 (1.0, 0.0) (CarSpawner {route = carRouteUp, interval = 10, nextIn = 0, startEdge = (2, 4)}),
         node 3 (0.0, 1.0) Intersection,
-        node 4 (1.0, 1.0) Intersection,
+        node 4 (1.0, 1.0) (StopSign {delay = 5, currentDelay = 0.0}),
         node 5 (0.0, 2.0) (CarSpawner {route = carRouteDown, interval = 10, nextIn = 0, startEdge = (5, 3)}),
         node 6 (1.0, 2.0) Intersection,
         node 7 (2.0, 2.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.5})
@@ -36,15 +39,17 @@ example =
       edge from to distance agents = Edge from to (Road distance agents)
       
       edges = [
-       edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.04, color = Color.green, lastEdge = Nothing}],
+       edge 1 2 1.0 [{kind = bus, travelled = 0.0, totalDist = 0.0, speed = 0.04, color = Color.green, lastEdge = Nothing}],
        edge 2 4 1.0 [],
        edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
-       edge 4 6 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}, {kind = bus2, travelled = 0.15, speed = 0.05, color = Color.blue, lastEdge = Nothing}],
-       edge 5 3 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.red, lastEdge = Nothing}],
-       edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.08, color = Color.orange, lastEdge = Nothing}],
-       edge 7 6 1.0 [{kind = bus, travelled = 0.0, speed = 0.05, color = Color.purple, lastEdge = Nothing}, {kind = bus, travelled = 0.15, speed = 0.05, color = Color.purple, lastEdge = Nothing}]
+       edge 4 6 1.0 [{kind = bus2, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}, 
+                     {kind = bus2, travelled = 0.15, totalDist = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}],
+       edge 5 3 1.0 [{kind = bus2, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.red, lastEdge = Nothing}],
+       edge 6 5 1.0 [{kind = bus, travelled = 0.0, totalDist = 0.0, speed = 0.08, color = Color.orange, lastEdge = Nothing}],
+       edge 7 6 1.0 [{kind = bus, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.purple, lastEdge = Nothing}, 
+                     {kind = bus, travelled = 0.15, totalDist = 0.0, speed = 0.05, color = Color.purple, lastEdge = Nothing}]
       ]
   in
   Graph.fromNodesAndEdges nodes edges
@@ -77,7 +82,7 @@ updateContext ctx =
                            else Nothing
             spawnedAgents = case ctx.node.label.kind of
                               CarSpawner props -> if props.nextIn < 1 && props.startEdge == edgeIds
-                                                  then [{kind = Car props.route, speed = 0.05, travelled = 0.0, color = Color.gray, lastEdge = Nothing}]
+                                                  then [{kind = Car props.route, speed = 0.05, travelled = 0.0, totalDist = 0.0, color = Color.gray, lastEdge = Nothing}]
                                                   else []
                               _                -> []
         in 
@@ -99,6 +104,11 @@ updatePoint edges id point =
                                        else { props | currentlyWaiting <- props.currentlyWaiting + props.waitingDelta }
                         in
                           { point | kind <- BusStop newProps}
+    StopSign props   -> let newProps = if List.any (\e -> e.to == id && List.any (\a -> a.travelled == e.label.length) e.label.agents) edges
+                                       then { props | currentDelay <- props.currentDelay - 1 }
+                                       else { props | currentDelay <- props.delay }
+                        in
+                          { point | kind <- StopSign newProps}
     CarSpawner props -> let newProps = if props.nextIn < 1
                                        then { props | nextIn <- props.interval }
                                        else { props | nextIn <- props.nextIn - 1 }
@@ -106,8 +116,8 @@ updatePoint edges id point =
                           { point | kind <- CarSpawner newProps}
     Intersection    -> point
 
-update : Network -> Network
-update net =
+updateNetwork : Network -> Network
+updateNetwork net =
   let go ctx (ins, outs) = let (in', out') = updateContext ctx in (ins ++ in', outs ++ out')
       (ins, outs) = Graph.fold go ([], []) net
 
@@ -118,13 +128,35 @@ update net =
                     in
                       IntDict.values united
 
-      newNodes = Graph.nodes net |> List.map (\n -> {n | label <- updatePoint mergedEdges n.id n.label} |> watchIf "point" (n.id == 2))
+      newNodes = Graph.nodes net |> List.map (\n -> {n | label <- updatePoint mergedEdges n.id n.label} {- |> watchIf "point" (n.id == 2) -} )
   in
     Graph.fromNodesAndEdges newNodes mergedEdges
 
+analyze : Network -> Metrics -> Metrics
+analyze net oldMetrics =
+  let numAgents = Graph.edges net |> List.map (\edge -> List.length edge.label.agents |> toFloat) |> List.sum
+      numBuses = Graph.edges net |> List.map (\edge -> List.filter isBus edge.label.agents |> List.length  |> toFloat) |> List.sum
+      numRoads = Graph.edges net |> List.length |> toFloat
+      totalBusDistanceTravelled = Graph.edges net |> List.map (\edge -> List.map busDistanceTravelled edge.label.agents |> List.sum) |> List.sum
+
+      currentCongestion = numAgents / numRoads
+      avgBusDistanceTravelled = totalBusDistanceTravelled / numBuses
+
+      metrics = oldMetrics |> Dict.insert "ticks" (1 + (Dict.get "ticks" oldMetrics |> Maybe.withDefault 0))
+                           |> Dict.insert "currentCongestion" currentCongestion
+                           |> Dict.insert "totalCongestion" (currentCongestion + (Dict.get "totalCongestion" oldMetrics |> Maybe.withDefault 0))
+                           |> Dict.insert "avgBusDistanceTravelled" avgBusDistanceTravelled
+  in
+    metrics |> Dict.insert "avgCongestion" ((Dict.get "totalCongestion" metrics |> getOrFail "") / (Dict.get "ticks" metrics |> getOrFail ""))
+            |> Dict.insert "avgBusSpeed" ((Dict.get "avgBusDistanceTravelled" metrics |> getOrFail "") / (Dict.get "ticks" metrics |> getOrFail "") * fps)
+            |> Debug.watch "metrics"
+
+update : State -> State
+update (State network metrics) = State (updateNetwork network) (analyze network metrics)
+
 main : Signal Element
 main =
-  let initialState = example
-      state = foldp (\tick s -> update s) initialState (fps 30)
+  let initialState = State example Dict.empty
+      state = foldp (\tick s -> update s) initialState (Time.fps fps)
   in
     Signal.map render state

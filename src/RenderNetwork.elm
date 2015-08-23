@@ -1,7 +1,7 @@
 module RenderNetwork where
 
 import Color exposing (Color)
-import Graphics.Element as Element exposing (Element)
+import Graphics.Element as Element exposing (Element, show, flow, down)
 import Graphics.Collage as GC exposing (Form)
 import Text
 
@@ -52,18 +52,21 @@ renderAgent (coords, agent, angle) =
 renderPoint : Point -> Form
 renderPoint point =
   case point.kind of 
-    BusStop props -> let size = max 2 <| min 10 (props.currentlyWaiting / 5)
-                         crowdCircle = GC.filled Color.lightBlue <| GC.circle size
-                         busSign = GC.group [ GC.traced GC.defaultLine <| GC.segment (0,0) (0,50)
-                                            , GC.move (0,50) <| GC.filled Color.yellow <| GC.circle 15
-                                            , GC.move (0,50) <| GC.text <| Text.fromString "BUS"
-                                            ]
-                     in
-                       GC.move (loc point.coords) <| GC.group [crowdCircle, busSign]
-    _             -> GC.toForm Element.empty
+    BusStop props  -> let crowdSize = max 2 <| min 10 (props.currentlyWaiting / 5)
+                          crowdCircle = GC.filled Color.lightBlue <| GC.circle crowdSize
+                          busSign = GC.group [ GC.traced GC.defaultLine <| GC.segment (0,0) (-20,50)
+                                             , GC.move (-20,50) <| GC.filled Color.yellow <| GC.circle 15
+                                             , GC.rotate (degrees 22.5) <| GC.move (-20,50) <| GC.text <| Text.fromString "BUS"
+                                             ]
+                      in
+                        GC.move (addCoords (-size*5,size*5) (loc point.coords)) <| GC.group [crowdCircle, busSign]
+    StopSign props -> GC.group [ GC.traced GC.defaultLine <| GC.segment (0,0) (-20,50)
+                               , GC.move (-20,50) <| GC.filled Color.red <| GC.ngon 8 15
+                               ] |> GC.move (addCoords (-size*5,size*5) (loc point.coords))
+    _              -> GC.toForm Element.empty
 
-render : Network -> Element
-render net =
+renderNetwork : Network -> Element
+renderNetwork net =
   let
     points = Graph.nodes net |> List.map .label
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
@@ -75,3 +78,10 @@ render net =
     agents = List.map renderAgent (agentPositions net)
   in
     GC.collage 800 800 <| roads ++ lines ++ busStops ++ agents
+
+render : State -> Element
+render (State network metrics) =
+  flow down [ show metrics 
+            , renderNetwork network
+            ]
+

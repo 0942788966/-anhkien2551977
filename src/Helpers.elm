@@ -28,6 +28,9 @@ interpolate p1 p2 fraction = { x = (1 - fraction) * p1.x + fraction * p2.x
                              , y = (1 - fraction) * p1.y + fraction * p2.y
                              }
 
+addCoords : (Float, Float) -> (Float, Float) -> (Float, Float)
+addCoords (x1,y1) (x2,y2) = (x1+x2, y1+y2)
+
 busRouteFromList : List NodeId -> Route
 busRouteFromList x = case x of
   []    -> IntDict.empty

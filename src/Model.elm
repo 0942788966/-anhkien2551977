@@ -4,6 +4,7 @@ import Effects
 import Time exposing (Time)
 import Debug
 
+import Types
 import Network
 
 type ScreenState = TitleScreen | ChooseLevelScreen | LevelScreen Int | MessageScreen Int
@@ -22,7 +23,7 @@ type alias Model = { numCars: Int,
                     screen: ScreenState,
                     time: GameTime,
                     timeAdvancing: Bool,
-                    network: Network.Network,
+                    network: Types.Network,
                     realtimeMs: Float,
                     counter: Int,
                     tickRate : Int -- one game time tick every tickRate ms

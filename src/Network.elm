@@ -86,9 +86,9 @@ roadStyle = let def = GC.defaultLine in
 
 medianStyle : GC.LineStyle
 medianStyle = let def = GC.defaultLine in
-            { def | width <- size / 2, 
+            { def | width <- size / 2,
                     cap <- GC.Round,
-                    color <- Color.yellow, 
+                    color <- Color.yellow,
                     dashing <- [8 * round size, 4 * round size] }
 
 size : Float
@@ -105,7 +105,7 @@ getNodes net edge = case (Graph.get edge.from net, Graph.get edge.to net) of
 
 render : Network -> Element
 render net =
-  let 
+  let
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
     edgeLines = List.map (\ (n1, n2) -> GC.segment (loc n1) (loc n2)) edgeNodePairs
 
@@ -122,7 +122,7 @@ changeEdge : Agent -> NodeId -> NodeId
 changeEdge agent nid = case agent.kind of
                          Bus route -> IntDict.get nid route |> getOrFail
 
-updateContext : NodeContext Point Road -> NodeContext Point Road
+updateContext : NodeContext Point Road -> (NodeContext Point Road, (NodeId, Graph.Adjacency Road))
 updateContext ctx =
   let moveAgent from road agent =
         let moved = translate agent in
@@ -135,14 +135,22 @@ updateContext ctx =
         let check (e, a) = if e == edgeIds then Just a else Nothing in
         { road | agents <- List.filterMap check moved }
   in
-    { ctx | incoming <- IntDict.map (\ nid road -> updateEdge (nid, ctx.node.id) road) ctx.incoming
-          , outgoing <- IntDict.map (\ nid road -> updateEdge (ctx.node.id, nid) road) ctx.outgoing }
+    ({ ctx | incoming <- IntDict.map (\ nid road -> updateEdge (nid, ctx.node.id) road) ctx.incoming },
+     (ctx.node.id, IntDict.map (\ nid road -> updateEdge (ctx.node.id, nid) road) ctx.outgoing))
 
 update : Network -> Network
-update = Graph.mapContexts updateContext
+update net =
+  let go ctx (g, outs) = let (ctx', out') = updateContext ctx in (Graph.insert ctx' g, out'::outs)
+  -- The network with all the *incoming* edges updated
+      (net', outs) = Graph.fold go (Graph.empty, []) net
+      updateNode out x = case x of
+        Just ctx -> Just { ctx | outgoing <- IntDict.union ctx.outgoing out }
+        Nothing  -> Nothing
+  in
+  List.foldl (\ (nid, out) net -> Graph.update nid (updateNode out) net) net' outs
 
 main : Signal Element
-main = 
+main =
   let initialState = example
       state = foldp (\tick s -> update s) initialState (fps 30)
   in

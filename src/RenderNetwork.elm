@@ -1,8 +1,8 @@
 module RenderNetwork where
 
 import Color exposing (Color)
-import Graphics.Element exposing (Element)
-import Graphics.Collage as GC
+import Graphics.Element as Element exposing (Element)
+import Graphics.Collage as GC exposing (Form)
 
 import Graph exposing (Edge)
 
@@ -43,6 +43,18 @@ getNodes net edge = case (Graph.get edge.from net, Graph.get edge.to net) of
                       (Just x, Just y) -> Just (x.node.label.coords, y.node.label.coords)
                       _                -> Nothing
 
+renderAgent : (Coords, Agent, Float) -> Form
+renderAgent (coords, agent, angle) =
+  GC.rotate angle <| GC.move (loc coords) <| GC.filled agent.color <| GC.rect (renderedSizeOf agent) 12
+
+renderPoint : Point -> Form
+renderPoint point =
+  case point.kind of 
+    BusStop props -> let size = max 2 <| min 10 (props.currentlyWaiting / 5)
+                     in
+                       GC.move (loc point.coords) <| GC.filled Color.lightBlue <| GC.circle size
+    Intersection  -> GC.toForm Element.empty
+
 render : Network -> Element
 render net =
   let
@@ -50,10 +62,9 @@ render net =
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
     edgeLines = List.map (\ (n1, n2) -> GC.segment (loc n1) (loc n2)) edgeNodePairs
 
-    busStops = points |> List.filterMap (\p -> case p.kind of BusStop props -> Just (GC.move (loc p.coords) <| GC.filled Color.lightBlue <| GC.circle (max 2 <| min 10 (props.currentlyWaiting / 5)))
-                                                              otherwise -> Nothing)
+    busStops = List.map renderPoint points
     roads = List.map (GC.traced roadStyle) edgeLines
     lines = List.map (GC.traced medianStyle) edgeLines
-    agents = List.map (\(pt, agent, angle) -> GC.rotate angle <| GC.move (loc pt) <| GC.filled agent.color <| GC.rect (renderedSizeOf agent) 12) (agentPositions net)
+    agents = List.map renderAgent (agentPositions net)
   in
     GC.collage 800 800 <| roads ++ lines ++ busStops ++ agents

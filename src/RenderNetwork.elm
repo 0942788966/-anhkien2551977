@@ -79,5 +79,8 @@ render net =
     roads = List.map (GC.traced roadStyle) edgeLines
     lines = List.map (GC.traced medianStyle) edgeLines
     agents = List.map renderAgent (agentPositions net)
+        
+    globalTransform = (-200.0, -100.0)
+    mapGroup = GC.move globalTransform (GC.group <| roads ++ lines ++ busStops ++ agents)
   in
-    GC.collage 900 800 <| roads ++ lines ++ busStops ++ agents
+    GC.collage 1000 800 <| [mapGroup]

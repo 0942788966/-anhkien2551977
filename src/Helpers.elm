@@ -13,6 +13,9 @@ getOrFail ex maybe =
     Just something -> something
     Nothing -> Debug.crash ex
 
+dropRight : List a -> List a
+dropRight lst = List.reverse <| List.drop 1 <| List.reverse lst
+
 watchIf : String -> Bool -> a -> a
 watchIf str bool value =
   if bool then Debug.watch str value else value
@@ -25,7 +28,12 @@ interpolate p1 p2 fraction = { x = (1 - fraction) * p1.x + fraction * p2.x
                              , y = (1 - fraction) * p1.y + fraction * p2.y
                              }
 
-routeFromList : List NodeId -> Route
-routeFromList x = case x of
+busRouteFromList : List NodeId -> Route
+busRouteFromList x = case x of
   []    -> IntDict.empty
   n::ns -> IntDict.fromList <| List.map2 (,) (n::ns) (ns ++ [n])
+
+carRouteFromList : List NodeId -> Route
+carRouteFromList x = case x of
+  []    -> IntDict.empty
+  n::ns -> IntDict.fromList <| List.map2 (,) (dropRight (n::ns)) (ns)

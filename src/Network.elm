@@ -16,9 +16,10 @@ import Agent
 
 example : Network
 example =
-  let bus = Bus <| routeFromList [1, 2, 7, 6, 5, 3]
-      bus2 = Bus <| routeFromList [6, 5, 3, 4]
-      car = Car <| routeFromList [6, 5, 3, 4]
+  let bus = Bus <| busRouteFromList [1, 2, 7, 6, 5, 3]
+      bus2 = Bus <| busRouteFromList [6, 5, 3, 4]
+      carUp = Car <| carRouteFromList [2, 4, 6]
+      carDown = Car <| carRouteFromList [5, 3, 1]
 
       points = (List.map (\c -> {coords = c, kind = Intersection}) <| List.map (uncurry Coords) [
        (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0)
@@ -29,12 +30,12 @@ example =
       
       edges = [
        edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.04, color = Color.green, lastEdge = Nothing}],
-       edge 2 4 1.0 [],
+       edge 2 4 1.0 [{kind = carUp, travelled = 0.0, speed = 0.04, color = Color.gray, lastEdge = Nothing}],
        edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
-       edge 4 6 1.0 [{kind = car, travelled = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}, {kind = car, travelled = 0.15, speed = 0.05, color = Color.blue, lastEdge = Nothing}],
-       edge 5 3 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.red, lastEdge = Nothing}],
+       edge 4 6 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}, {kind = bus2, travelled = 0.15, speed = 0.05, color = Color.blue, lastEdge = Nothing}],
+       edge 5 3 1.0 [{kind = carDown, travelled = 0.0, speed = 0.04, color = Color.gray, lastEdge = Nothing}, {kind = bus2, travelled = 0.0, speed = 0.05, color = Color.red, lastEdge = Nothing}],
        edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.08, color = Color.orange, lastEdge = Nothing}],
        edge 7 6 1.0 [{kind = bus, travelled = 0.0, speed = 0.05, color = Color.purple, lastEdge = Nothing}, {kind = bus, travelled = 0.15, speed = 0.05, color = Color.purple, lastEdge = Nothing}]
       ]

@@ -14,9 +14,8 @@ translate agent maxTravelled =
 changeEdge : Agent -> NodeId -> NodeId
 changeEdge agent nid = 
   case agent.kind of
-    -- TODO: cars and buses should have different behaviors
-    Bus route -> IntDict.get nid route |> getOrFail ("Bus can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route))
-    Car route -> IntDict.get nid route |> getOrFail ("Car can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route))
+    Bus route -> IntDict.get nid route |> getOrFail ("Bus can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route)) 
+    Car route -> IntDict.get nid route |> Maybe.withDefault 10000   -- pass in an invalid NodeId to make the car disappear after finishing its route
 
 move : NodeContext Point Road -> NodeId -> Road -> Agent -> Float -> ((NodeId, NodeId), Agent)
 move ctx from road agent maxTravelled =

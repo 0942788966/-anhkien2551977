@@ -5,10 +5,18 @@ import StartApp.Simple exposing (start)
 import Signal exposing (Address)
 import Graphics.Element as G
 import Text as T
+import List as L
 import Color
 import Array
 import EmailTexts exposing (emailTexts)
 
+
+type GameScreenType = Message Int | Level Int
+
+gameScreens = [
+        (Message 0, "Email"),
+        (Level 0, "Monday Morning MTA Madness")
+    ]
 type ScreenState = TitleScreen | ChooseLevelScreen | LevelScreen Int | MessageScreen Int
 
 type alias Model = { numCars: Int, screen: ScreenState }
@@ -57,10 +65,28 @@ renderTitleScreen address =
                     gameButton address (GoToScreen <| ChooseLevelScreen)  "Continue"
                 ]
 
+
+
 renderChooseLevel : Address Action -> Model -> Html
-renderChooseLevel address model = Html.div []
-        [ Html.text "Choose a level" ,
-          Html.button [onClick address (GoToScreen TitleScreen)] [Html.text "Return to title"]
+renderChooseLevel address model =
+    let
+        screenLinkIfUnlocked address (screenType, name) =
+            case screenType of
+                Message n -> Html.li [onClick address (GoToScreen <| MessageScreen n)] [Html.text name]
+                Level n -> Html.li [onClick address (GoToScreen <| LevelScreen n)] [Html.text name]
+   
+    in Html.div []
+        [
+            Html.div [style [("color", "white"),
+                             ("background-color", "rgb(94, 5, 135"),
+                             ("width", "800px"),
+                             ("height", "600px")]
+                     ] 
+            [
+                Html.text "Choose a level" ,
+                Html.ul [] <| L.map (screenLinkIfUnlocked address) gameScreens
+            ],
+           gameButton address (GoToScreen TitleScreen) "Return to title"
         ]
 
 renderLevel : Int -> Address Action -> Model -> Html

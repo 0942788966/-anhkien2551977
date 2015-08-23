@@ -99,7 +99,7 @@ size : Float
 size = 2.5
 
 padding : Float
-padding = 0.1
+padding = 0.04
 
 loc : Point -> (Float, Float)
 loc n = (size * 50 * n.x, size * 50 * n.y)
@@ -147,7 +147,7 @@ moveAgents ctx =
       in
       moveAgent ctx from road agent max :: calculated
     in
-    List.foldl go [] road.agents
+    List.foldl go [] <| List.reverse <| List.sortBy .travelled road.agents
   in
   IntDict.toList ctx.incoming |> List.concatMap moveRoad
 

@@ -5,10 +5,12 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (style)
 import Signal exposing (Address)
 import Graphics.Element as G
+import Graphics.Collage exposing (..)
 import Text as T
 import List as L
 import Color
 import Array
+import Debug
 
 import EmailTexts exposing (emailTexts)
 import GameScreens exposing (..)
@@ -144,8 +146,27 @@ gameClock =
                         ("height", "200px"),
                         whiteBackgroundCss
                       ]
+
+        clockCollage t =
+            let 
+                hand len time =
+                   let
+                       angle = degrees (90 - 6 * time)
+                   in 
+                      segment (0,0) (fromPolar (len, angle))
+                hourHand t = hand 50 (t/60) |> traced (solid Color.charcoal)
+                minuteHand t = hand 90 t |> traced (solid Color.orange)
+                timeInMinutes = 540
+            in
+                collage 200 200
+                    [ 
+                        filled Color.lightGrey (ngon 30 90),
+                        outlined (solid Color.grey) (ngon 30 90),
+                        hourHand timeInMinutes,
+                        minuteHand timeInMinutes
+                    ]
     in
-       Html.div [style styleAttrs] [Html.text "12:00"]
+       Html.div [style styleAttrs] [Html.fromElement <| clockCollage 0]
 
 trafficGrid : Html
 trafficGrid = Html.div [style [("text-align", "right")]] [Html.text "Placeholder for game content"]

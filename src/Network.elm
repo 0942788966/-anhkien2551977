@@ -1,6 +1,6 @@
 module Network where
 
-import Color
+import Color exposing (Color)
 import Graphics.Element exposing (Element, show, flow, down)
 import Graphics.Collage as GC
 import Signal exposing (foldp)
@@ -23,7 +23,8 @@ type alias Road = {
 type alias Agent = {
     kind      : AgentKind,
     speed     : Float,
-    travelled : Float
+    travelled : Float,
+    color     : Color
   }
 
 type AgentKind = Bus BusRoute
@@ -54,14 +55,14 @@ example =
       nodes = List.map2 Node [1..7] points
       edge from to distance agents = Edge from to (Road distance agents)
       edges = [
-       edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.06}],
+       edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.06, color = Color.green}],
        edge 2 4 1.0 [],
        edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
-       edge 4 6 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05}],
-       edge 5 3 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05}],
-       edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.05}],
+       edge 4 6 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.blue}],
+       edge 5 3 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.red}],
+       edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.05, color = Color.orange}],
        edge 7 6 1.0 []
       ]
   in
@@ -72,7 +73,7 @@ along p1 p2 fraction = { x = (1 - fraction) * p1.x + fraction * p2.x
                        , y = (1 - fraction) * p1.y + fraction * p2.y
                        }
 
-agentPositions : Network -> List Point
+agentPositions : Network -> List (Point, Agent)
 agentPositions network =
   let go edge =
       let road = edge.label
@@ -80,7 +81,7 @@ agentPositions network =
           toPoint = Graph.get edge.to network |> getOrFail "can't find toPoint" |> .node |> .label
           length = road.length
           agents = road.agents
-      in List.map (\a -> along fromPoint toPoint (a.travelled / length)) agents
+      in List.map (\a -> (along fromPoint toPoint (a.travelled / length), a)) agents
   in (List.concatMap go <| Graph.edges network) |> Debug.watch "agentPositions"
 
 roadStyle : GC.LineStyle
@@ -117,7 +118,7 @@ render net =
 
     roads = List.map (GC.traced roadStyle) edgeLines
     lines = List.map (GC.traced medianStyle) edgeLines
-    agents = List.map (\pt -> GC.move (loc pt) <| GC.filled Color.red (GC.circle 10)) (agentPositions net)
+    agents = List.map (\(pt, a) -> GC.move (loc pt) <| GC.filled a.color (GC.circle 10)) (agentPositions net)
   in
     GC.collage 800 800 <| roads ++ lines ++ agents
 

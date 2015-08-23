@@ -124,15 +124,22 @@ changeEdge : Agent -> NodeId -> NodeId
 changeEdge agent nid = case agent.kind of
                          Bus route -> IntDict.get nid route |> getOrFail
 
+moveAgents : NodeContext Point Road -> List ((NodeId, NodeId), Agent)
+moveAgents ctx =
+  let moveAgent from road agent =
+        let moved = translate agent
+        in
+          if moved.travelled > road.length
+          then ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- 0.0 })
+          else ((from, ctx.node.id), moved)
+  in
+    IntDict.toList ctx.incoming |> List.concatMap (\ (from, road) ->
+                                                     List.map (moveAgent from road) road.agents)
+
 updateContext : NodeContext Point Road -> (List (Edge Road), List (Edge Road))
 updateContext ctx =
-  let moveAgent from road agent =
-        let moved = translate agent in
-        if (moved.travelled > road.length)
-        then ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- 0.0 })
-        else ((from, ctx.node.id), moved)
-      movedAgents (from, road) = List.map (moveAgent from road) road.agents
-      moved = IntDict.toList ctx.incoming |> List.concatMap movedAgents
+  let moved = moveAgents ctx
+
       updateEdge edgeIds road =
         let check (e, a) = if e == edgeIds then Just a else Nothing in
         { road | agents <- List.filterMap check moved }

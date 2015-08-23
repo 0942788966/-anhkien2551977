@@ -7,8 +7,10 @@ import Graphics.Collage as GC
 import Graph exposing (Graph, Edge)
 
 import Types exposing (..)
-import Globals exposing (..)
 import Helpers exposing (..)
+
+size : Float
+size = 2.5
 
 roadStyle : GC.LineStyle
 roadStyle = let def = GC.defaultLine in
@@ -49,6 +51,6 @@ render net =
 
     roads = List.map (GC.traced roadStyle) edgeLines
     lines = List.map (GC.traced medianStyle) edgeLines
-    agents = List.map (\(pt, agent, angle) -> GC.rotate angle <| GC.move (loc pt) <| GC.filled agent.color (GC.rect 20 12)) (agentPositions net)
+    agents = List.map (\(pt, agent, angle) -> GC.rotate angle <| GC.move (loc pt) <| GC.filled agent.color (GC.rect (renderedSizeOf agent) 12)) (agentPositions net)
   in
     GC.collage 800 800 <| roads ++ lines ++ agents

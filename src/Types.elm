@@ -22,6 +22,19 @@ type alias Agent = {
     lastEdge  : Maybe (NodeId, NodeId)
   }
 
-type AgentKind = Bus BusRoute
+type AgentKind = Bus Route | Car Route
 
-type alias BusRoute = IntDict NodeId
+type alias Route = IntDict NodeId
+
+
+sizeOf : Agent -> Float
+sizeOf agent =
+  case agent.kind of
+    Bus _ -> 0.2
+    Car _ -> 0.16
+
+renderedSizeOf : Agent -> Float
+renderedSizeOf agent =
+  case agent.kind of
+    Bus _ -> 20
+    Car _ -> 12

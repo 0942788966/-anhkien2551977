@@ -11,7 +11,6 @@ import Graph exposing (Graph, Node, Edge, NodeContext, NodeId)
 import Debug
 
 import Types exposing (..)
-import Globals exposing (..)
 import Helpers exposing (..)
 import RenderNetwork exposing (render)
 
@@ -24,6 +23,7 @@ example : Network
 example =
   let bus = Bus <| routeFromList [1, 2, 7, 6, 5, 3]
       bus2 = Bus <| routeFromList [6, 5, 3, 4]
+      car = Car <| routeFromList [6, 5, 3, 4]
 
       points = List.map (uncurry Point) [
        (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0), (2.25,2.0)
@@ -38,7 +38,7 @@ example =
        edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
-       edge 4 6 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}, {kind = bus2, travelled = 0.15, speed = 0.05, color = Color.blue, lastEdge = Nothing}],
+       edge 4 6 1.0 [{kind = car, travelled = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}, {kind = car, travelled = 0.15, speed = 0.05, color = Color.blue, lastEdge = Nothing}],
        edge 5 3 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.red, lastEdge = Nothing}],
        edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.08, color = Color.orange, lastEdge = Nothing}],
        edge 7 6 1.0 [{kind = bus, travelled = 0.0, speed = 0.05, color = Color.purple, lastEdge = Nothing}, {kind = bus, travelled = 0.15, speed = 0.05, color = Color.purple, lastEdge = Nothing}]
@@ -48,12 +48,14 @@ example =
 
 translate : Agent -> Float -> Agent
 translate agent maxTravelled =
-  let limit = maxTravelled - padding in
+  let limit = maxTravelled in
   { agent | travelled <- min (agent.travelled + agent.speed) limit }
 
 changeEdge : Agent -> NodeId -> NodeId
 changeEdge agent nid = case agent.kind of
+                         -- TODO: cars and buses should have different behavior
                          Bus route -> IntDict.get nid route |> getOrFail ("Bus can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route))
+                         Car route -> IntDict.get nid route |> getOrFail ("Bus can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route))
 
 moveAgent : NodeContext Point Road -> NodeId -> Road -> Agent -> Float -> ((NodeId, NodeId), Agent)
 moveAgent ctx from road agent maxTravelled =
@@ -71,7 +73,9 @@ moveAgents ctx =
   let moveRoad (from, road) =
     let go agent calculated =
       let onEdge = List.filter (\ ((f, _), _) -> f == from) calculated |> List.map snd
-          max = (Maybe.withDefault (1/0) <| List.head <| List.map .travelled onEdge)
+          max = case onEdge |> List.head of
+                  Just agent -> agent.travelled - sizeOf agent
+                  Nothing    -> 1/0
       in
       moveAgent ctx from road agent max :: calculated
     in

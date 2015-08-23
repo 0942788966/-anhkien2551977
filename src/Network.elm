@@ -9,6 +9,8 @@ import Time exposing (fps)
 import IntDict exposing (IntDict)
 import Graph exposing (Graph, Node, Edge, NodeContext, NodeId)
 
+import Debug
+
 type alias Point = { x : Float, y : Float }
 
 type alias Network = Graph Point Road
@@ -48,11 +50,11 @@ example =
        (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0), (2.25,2.0)
       ]
       nodes = List.map2 Node [1..7] points
-      edge from to distance agents = Edge to from (Road distance agents)
+      edge from to distance agents = Edge from to (Road distance agents)
       edges = [
        edge 1 2 1.0 [],
        edge 2 4 1.0 [],
-       edge 2 7 (dist 1 2) [{kind = bus, speed = 0.005, travelled = 1.0}],
+       edge 2 7 (dist 1 2) [{kind = bus, speed = 0.01, travelled = 1.0}],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
        edge 4 6 1.0 [],
@@ -134,9 +136,11 @@ updateContext ctx =
       updateEdge edgeIds road =
         let check (e, a) = if e == edgeIds then Just a else Nothing in
         { road | agents <- List.filterMap check moved }
+
+      newIncoming = IntDict.map (\ nid road -> updateEdge (nid, ctx.node.id) road) ctx.incoming
+      newOutgoing = IntDict.map (\ nid road -> updateEdge (ctx.node.id, nid) road) ctx.outgoing
   in
-    ({ ctx | incoming <- IntDict.map (\ nid road -> updateEdge (nid, ctx.node.id) road) ctx.incoming },
-     (ctx.node.id, IntDict.map (\ nid road -> updateEdge (ctx.node.id, nid) road) ctx.outgoing))
+    ({ ctx | incoming <- newIncoming }, (ctx.node.id, newOutgoing))
 
 update : Network -> Network
 update net =
@@ -147,7 +151,7 @@ update net =
         Just ctx -> Just { ctx | outgoing <- IntDict.union ctx.outgoing out }
         Nothing  -> Nothing
   in
-  List.foldl (\ (nid, out) net -> Graph.update nid (updateNode out) net) net' outs
+  List.foldl (\ (nid, out) net -> Graph.update nid (updateNode out) net) net' (outs |> Debug.watch "outs")
 
 main : Signal Element
 main =
@@ -155,3 +159,7 @@ main =
       state = foldp (\tick s -> update s) initialState (fps 30)
   in
     Signal.map render state
+
+watchIf : String -> Bool -> a -> a
+watchIf str bool value =
+  if bool then Debug.watch str value else value

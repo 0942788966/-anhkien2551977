@@ -11,6 +11,7 @@ import List as L
 import Color
 import Array
 import Debug
+import Network
 
 import EmailTexts exposing (emailTexts)
 import GameScreens exposing (..)
@@ -114,12 +115,14 @@ renderLevel levelNum address model =
              ]
     [
         controlPane [
-            gameButton address Tick "Delay traffic",
-            gameButton address (GoToScreen TitleScreen) "Return to title"
+            gameButton address ToggleAdvancingTime "Delay traffic",
+            gameButton address (GoToScreen TitleScreen) "Return to title",
+            gameButton address ToggleAdvancingTime "Toggle time"
+
         ],
 
-        gameClock,
-        trafficGrid
+        gameClock model,
+        trafficGrid model
     ]
 
 controlPane : List Html -> Html
@@ -135,8 +138,8 @@ controlPane contents =
    in
       Html.div [style styleAttrs] contents
 
-gameClock: Html
-gameClock =
+gameClock: Model -> Html
+gameClock model =
     let styleAttrs = [
                         ("position", "absolute"),
                         boxShadowCss,
@@ -149,6 +152,7 @@ gameClock =
 
         clockCollage t =
             let 
+                timeInMin t = toFloat ((\(GameTime n) -> n) t)
                 hand len time =
                    let
                        angle = degrees (90 - 6 * time)
@@ -156,17 +160,21 @@ gameClock =
                       segment (0,0) (fromPolar (len, angle))
                 hourHand t = hand 50 (t/60) |> traced (solid Color.charcoal)
                 minuteHand t = hand 90 t |> traced (solid Color.orange)
-                timeInMinutes = 540
             in
                 collage 200 200
                     [ 
                         filled Color.lightGrey (ngon 30 90),
                         outlined (solid Color.grey) (ngon 30 90),
-                        hourHand timeInMinutes,
-                        minuteHand timeInMinutes
+                        hourHand <| timeInMin model.time,
+                        minuteHand <| timeInMin model.time
                     ]
     in
-       Html.div [style styleAttrs] [Html.fromElement <| clockCollage 0]
+       Html.div [style styleAttrs] [Html.fromElement <| clockCollage 0, Html.fromElement (G.show model.time)]
 
-trafficGrid : Html
-trafficGrid = Html.div [style [("text-align", "right")]] [Html.text "Placeholder for game content"]
+trafficGrid : Model -> Html
+trafficGrid model = 
+    let
+        actualGame = Network.render model.network
+    in
+        Html.div [style [("float", "right")]] [Html.fromElement actualGame]
+

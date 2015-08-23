@@ -3,6 +3,7 @@ module RenderNetwork where
 import Color exposing (Color)
 import Graphics.Element as Element exposing (Element)
 import Graphics.Collage as GC exposing (Form)
+import Text
 
 import Graph exposing (Edge)
 
@@ -52,8 +53,13 @@ renderPoint : Point -> Form
 renderPoint point =
   case point.kind of 
     BusStop props -> let size = max 2 <| min 10 (props.currentlyWaiting / 5)
+                         crowdCircle = GC.filled Color.lightBlue <| GC.circle size
+                         busSign = GC.group [ GC.traced GC.defaultLine <| GC.segment (0,0) (0,50)
+                                            , GC.move (0,50) <| GC.filled Color.yellow <| GC.circle 15
+                                            , GC.move (0,50) <| GC.text <| Text.fromString "BUS"
+                                            ]
                      in
-                       GC.move (loc point.coords) <| GC.filled Color.lightBlue <| GC.circle size
+                       GC.move (loc point.coords) <| GC.group [crowdCircle, busSign]
     _             -> GC.toForm Element.empty
 
 render : Network -> Element

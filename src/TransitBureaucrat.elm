@@ -8,9 +8,6 @@ import Graphics.Element as G
 import Views exposing (..)
 import Model exposing (..)
 
-initialModel : Model
-initialModel =  { numCars = 0, screen = TitleScreen }
-
 update : Action -> Model -> Model
 update action oldModel =  case action of
     GoToScreen newScreen -> { oldModel | screen <- newScreen }

@@ -11,9 +11,8 @@ import Color
 import Array
 
 import EmailTexts exposing (emailTexts)
-import Action exposing (..)
 import GameScreens exposing (..)
-import Model exposing (Model)
+import Model exposing (..)
 
 gameButton : Address Action -> Action -> String -> Html
 gameButton address action text =

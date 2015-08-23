@@ -65,15 +65,6 @@ renderChooseLevel address model =
            gameButton address (GoToScreen TitleScreen) "Return to title"
         ]
 
-renderLevel : Int -> Address Action -> Model -> Html
-renderLevel levelNum address model = 
-    Html.div []
-    [
-        Html.fromElement <| G.flow G.down [title, mainGamePane, clock],
-        gameButton address Tick "Delay traffic",
-        gameButton address (GoToScreen TitleScreen) "Return to title"
-    ]
-
 renderMessageScreen : Int -> Address Action -> Html
 renderMessageScreen n address = case Array.get n emailTexts of
     Just emailText -> Html.div []
@@ -106,11 +97,55 @@ emailTemplate msg =
             msg
         ]
 
-title : G.Element
-title = G.show "Transit Bureaucrat"
+levelBackgroundCss = "rgb(140, 59, 177)"
+boxShadowCss = ("box-shadow", "5px 5px 10px #222222")
+whiteBackgroundCss = ("background-color", "white")
 
-mainGamePane : G.Element
-mainGamePane = G.show "main pane"
+renderLevel : Int -> Address Action -> Model -> Html
+renderLevel levelNum address model = 
+    Html.body [style
+                [("background-color", levelBackgroundCss),
+                 ("position", "absolute"),
+                 ("width", "100%"),
+                 ("height", "100%")
+                ]
+             ]
+    [
+        controlPane [
+            gameButton address Tick "Delay traffic",
+            gameButton address (GoToScreen TitleScreen) "Return to title"
+        ],
 
-clock: G.Element
-clock = G.show "clock"
+        gameClock,
+        trafficGrid
+    ]
+
+controlPane : List Html -> Html
+controlPane contents =
+   let styleAttrs = [("position", "absolute"),
+                     boxShadowCss,
+                     ("width", "400px"),
+                     ("height", "500px"),
+                     ("left", "10px"),
+                     ("top", "10px"),
+                     whiteBackgroundCss
+                    ]
+   in
+      Html.div [style styleAttrs] contents
+
+gameClock: Html
+gameClock =
+    let styleAttrs = [
+                        ("position", "absolute"),
+                        boxShadowCss,
+                        ("left", "100px"),
+                        ("top", "520px"),
+                        ("width", "200px"),
+                        ("height", "200px"),
+                        whiteBackgroundCss
+                      ]
+    in
+       Html.div [style styleAttrs] [Html.text "12:00"]
+
+trafficGrid : Html
+trafficGrid = Html.div [style [("text-align", "right")]] [Html.text "Placeholder for game content"]

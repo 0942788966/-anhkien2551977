@@ -54,17 +54,21 @@ example =
   Graph.fromNodesAndEdges nodes edges
 
 along : Point -> Point -> Float -> Point
-along p1 p2 fraction = {x = (1 - fraction) * p1.x + fraction * p2.x, y = (1 - fraction) * p1.y + fraction * p2.y}
+along p1 p2 fraction = { x = (1 - fraction) * p1.x + fraction * p2.x
+                       , y = (1 - fraction) * p1.y + fraction * p2.y
+                       }
 
-getAgentPositions : Edge Road -> Network -> List Point
-getAgentPositions edge network =
-  let road = edge.label
-      fromPoint = Graph.get edge.from network |> getOrFail |> .node |> .label
-      toPoint = Graph.get edge.to network |> getOrFail |> .node |> .label
-      length = road.length
-      agents = road.agents
-  in
-    List.map (\a -> along fromPoint toPoint (a.travelled / length)) agents
+agentPositions : Network -> List Point
+agentPositions network = 
+  let go edge =
+      let road = edge.label
+          fromPoint = Graph.get edge.from network |> getOrFail |> .node |> .label
+          toPoint = Graph.get edge.to network |> getOrFail |> .node |> .label
+          length = road.length
+          agents = road.agents
+      in List.map (\a -> along fromPoint toPoint (a.travelled / length)) agents
+  in List.concatMap go <| Graph.edges network
+
 
 roadStyle : GC.LineStyle
 roadStyle = let def = GC.defaultLine in
@@ -83,20 +87,21 @@ size = 2.5
 loc : Point -> (Float, Float)
 loc n = (size * 50 * n.x, size * 50 * n.y)
 
+getNodes : Network -> Edge Road -> Maybe (Point, Point)
+getNodes net edge = case (Graph.get edge.from net, Graph.get edge.to net) of
+                      (Just x, Just y) -> Just (x.node.label, y.node.label)
+                      _                -> Nothing
+
+
 render : Network -> Element
 render net =
-  let
-    getPair edge = case (Graph.get edge.from net, Graph.get edge.to net) of
-                     (Just x, Just y) -> Just (x.node.label, y.node.label)
-                     _                -> Nothing
-
-    edgeNodePairs = Graph.edges net |> List.filterMap getPair
+  let 
+    edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
     edgeLines = List.map (\ (n1, n2) -> GC.segment (loc n1) (loc n2)) edgeNodePairs
-    agentPositions = Graph.edges net |> List.concatMap (\e -> getAgentPositions e net)
 
     roads = List.map (GC.traced roadStyle) edgeLines
     lines = List.map (GC.traced medianStyle) edgeLines
-    agents = List.map (\pt -> GC.move (loc pt) <| GC.filled Color.red (GC.circle 10)) agentPositions
+    agents = List.map (\pt -> GC.move (loc pt) <| GC.filled Color.red (GC.circle 10)) (agentPositions net)
   in
     GC.collage 1500 1500 <| roads ++ lines ++ agents
 

@@ -4,7 +4,7 @@ import Color exposing (Color)
 import Graphics.Element exposing (Element)
 import Graphics.Collage as GC
 
-import Graph exposing (Graph, Edge)
+import Graph exposing (Edge)
 
 import Types exposing (..)
 import Helpers exposing (..)

@@ -13,6 +13,7 @@ import Debug
 import Types exposing (..)
 import Helpers exposing (..)
 import RenderNetwork exposing (render)
+import Agent
 
 routeFromList : List NodeId -> IntDict NodeId
 routeFromList x = case x of
@@ -46,28 +47,6 @@ example =
   in
   Graph.fromNodesAndEdges nodes edges
 
-translate : Agent -> Float -> Agent
-translate agent maxTravelled =
-  let limit = maxTravelled in
-  { agent | travelled <- min (agent.travelled + agent.speed) limit }
-
-changeEdge : Agent -> NodeId -> NodeId
-changeEdge agent nid = case agent.kind of
-                         -- TODO: cars and buses should have different behavior
-                         Bus route -> IntDict.get nid route |> getOrFail ("Bus can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route))
-                         Car route -> IntDict.get nid route |> getOrFail ("Bus can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route))
-
-moveAgent : NodeContext Point Road -> NodeId -> Road -> Agent -> Float -> ((NodeId, NodeId), Agent)
-moveAgent ctx from road agent maxTravelled =
-  let moved = translate agent maxTravelled
-  in
-    if moved.travelled > road.length
-    then let remainder = moved.travelled - road.length 
-         in
-           ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- remainder
-                                                                 , lastEdge <- Just (from, ctx.node.id) })
-    else ((from, ctx.node.id), moved)
-
 moveAgents : NodeContext Point Road -> List ((NodeId, NodeId), Agent)
 moveAgents ctx =
   let moveRoad (from, road) =
@@ -77,7 +56,7 @@ moveAgents ctx =
                   Just agent -> agent.travelled - sizeOf agent
                   Nothing    -> 1/0
       in
-      moveAgent ctx from road agent max :: calculated
+      Agent.move ctx from road agent max :: calculated
     in
     List.foldl go [] <| List.reverse <| List.sortBy .travelled road.agents
   in

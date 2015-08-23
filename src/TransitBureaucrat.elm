@@ -16,9 +16,6 @@ import Model exposing (..)
 update : Action -> Model -> (Model, E.Effects Action)
 update action oldModel =
   let
-    oldModelTime = Debug.watch "time" oldModel.realtimeMs
-    cxxxx = Debug.watch "counter" oldModel.counter
-    gameTime = Debug.watch "gametime" oldModel.time
     readyForNewGameTick counter = counter >= oldModel.tickRate
 
     newModel : Model

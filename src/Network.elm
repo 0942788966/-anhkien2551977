@@ -100,8 +100,15 @@ render net =
   in
     GC.collage 1500 1500 <| roads ++ lines ++ agents
 
+updateEdge : Network -> Road -> Road
+updateEdge net road =
+  let agents = road.agents
+      updatedAgents = List.map (\x -> {x | travelled <- x.travelled + 0.1}) agents
+  in
+    { road | agents <- updatedAgents }
+
 update : Network -> Network
-update net = net
+update net = Graph.mapEdges (updateEdge net) net
 
 main : Signal Element
 main = 

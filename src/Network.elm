@@ -6,7 +6,8 @@ import Graphics.Collage as GC
 import Signal exposing (foldp)
 import Time exposing (fps)
 
-import Graph exposing (Graph, Node, Edge)
+import IntDict exposing (IntDict)
+import Graph exposing (Graph, Node, Edge, NodeContext, NodeId)
 
 type alias Point = { x : Float, y : Float }
 
@@ -19,10 +20,13 @@ type alias Road = {
 
 type alias Agent = {
     kind      : AgentKind,
+    speed     : Float,
     travelled : Float
   }
 
-type AgentKind = Bus
+type AgentKind = Bus BusRoute
+
+type alias BusRoute = IntDict NodeId
 
 getOrFail : Maybe a -> a
 getOrFail maybe =
@@ -32,17 +36,23 @@ getOrFail maybe =
 dist : Float -> Float -> Float
 dist x y = sqrt (x^2 + y^2)
 
+routeFromList : List NodeId -> IntDict NodeId
+routeFromList x = case x of
+  []    -> IntDict.empty
+  n::ns -> IntDict.fromList <| List.map2 (,) (n::ns) (ns ++ [n])
+
 example : Network
 example =
-  let points = List.map (uncurry Point) [
+  let bus = Bus <| routeFromList [1, 2, 7, 6, 5, 3]
+      points = List.map (uncurry Point) [
        (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0), (2.25,2.0)
       ]
       nodes = List.map2 Node [1..7] points
       edge from to distance agents = Edge to from (Road distance agents)
       edges = [
-       edge 2 1 1.0 [],
+       edge 1 2 1.0 [],
        edge 2 4 1.0 [],
-       edge 2 7 (dist 1 2) [{kind = Bus, travelled = 1.0}],
+       edge 2 7 (dist 1 2) [{kind = bus, speed = 0.005, travelled = 1.0}],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
        edge 4 6 1.0 [],
@@ -59,7 +69,7 @@ along p1 p2 fraction = { x = (1 - fraction) * p1.x + fraction * p2.x
                        }
 
 agentPositions : Network -> List Point
-agentPositions network = 
+agentPositions network =
   let go edge =
       let road = edge.label
           fromPoint = Graph.get edge.from network |> getOrFail |> .node |> .label
@@ -105,15 +115,31 @@ render net =
   in
     GC.collage 1500 1500 <| roads ++ lines ++ agents
 
-updateEdge : Network -> Road -> Road
-updateEdge net road =
-  let agents = road.agents
-      updatedAgents = List.map (\x -> {x | travelled <- x.travelled + 0.005}) agents
+translate : Agent -> Agent
+translate agent = { agent | travelled <- agent.travelled + agent.speed }
+
+changeEdge : Agent -> NodeId -> NodeId
+changeEdge agent nid = case agent.kind of
+                         Bus route -> IntDict.get nid route |> getOrFail
+
+updateContext : NodeContext Point Road -> NodeContext Point Road
+updateContext ctx =
+  let moveAgent from road agent =
+        let moved = translate agent in
+        if moved.travelled > road.length
+        then ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- 0 })
+        else ((from, ctx.node.id), moved)
+      movedAgents (from, road) = List.map (moveAgent from road) road.agents
+      moved = IntDict.toList ctx.incoming |> List.concatMap movedAgents
+      updateEdge edgeIds road =
+        let check (e, a) = if e == edgeIds then Just a else Nothing in
+        { road | agents <- List.filterMap check moved }
   in
-    { road | agents <- updatedAgents }
+    { ctx | incoming <- IntDict.map (\ nid road -> updateEdge (nid, ctx.node.id) road) ctx.incoming
+          , outgoing <- IntDict.map (\ nid road -> updateEdge (ctx.node.id, nid) road) ctx.outgoing }
 
 update : Network -> Network
-update net = Graph.mapEdges (updateEdge net) net
+update = Graph.mapContexts updateContext
 
 main : Signal Element
 main = 

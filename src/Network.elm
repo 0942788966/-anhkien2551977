@@ -55,14 +55,14 @@ example =
       nodes = List.map2 Node [1..7] points
       edge from to distance agents = Edge from to (Road distance agents)
       edges = [
-       edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.06, color = Color.green}],
+       edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.04, color = Color.green}],
        edge 2 4 1.0 [],
        edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
        edge 4 6 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.blue}],
        edge 5 3 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05, color = Color.red}],
-       edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.05, color = Color.orange}],
+       edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.08, color = Color.orange}],
        edge 7 6 1.0 []
       ]
   in
@@ -99,7 +99,7 @@ size : Float
 size = 2.5
 
 padding : Float
-padding = 0.04
+padding = 0.12
 
 loc : Point -> (Float, Float)
 loc n = (size * 50 * n.x, size * 50 * n.y)
@@ -143,7 +143,7 @@ moveAgents ctx =
   let moveRoad (from, road) =
     let go agent calculated =
       let onEdge = List.filter (\ ((f, _), _) -> f == from) calculated |> List.map snd
-          max = (Maybe.withDefault (1/0) <| List.maximum <| List.map .travelled onEdge) |> Debug.watch "max"
+          max = (Maybe.withDefault (1/0) <| List.head <| List.map .travelled onEdge) |> Debug.watch "max"
       in
       moveAgent ctx from road agent max :: calculated
     in

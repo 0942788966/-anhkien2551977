@@ -1,7 +1,6 @@
 module Network where
 
 import Color
-import Dict
 import Graphics.Element exposing (Element, show, flow, down)
 import Graphics.Collage as GC
 import Signal exposing (foldp)
@@ -31,10 +30,11 @@ type AgentKind = Bus BusRoute
 
 type alias BusRoute = IntDict NodeId
 
-getOrFail : Maybe a -> a
-getOrFail maybe =
+getOrFail : String -> Maybe a -> a
+getOrFail ex maybe =
   case maybe of
     Just something -> something
+    Nothing -> Debug.crash ex
 
 dist : Float -> Float -> Float
 dist x y = sqrt (x^2 + y^2)
@@ -47,20 +47,21 @@ routeFromList x = case x of
 example : Network
 example =
   let bus = Bus <| routeFromList [1, 2, 7, 6, 5, 3]
+      bus2 = Bus <| routeFromList [6, 5, 3, 4]
       points = List.map (uncurry Point) [
        (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0), (2.25,2.0)
       ]
       nodes = List.map2 Node [1..7] points
       edge from to distance agents = Edge from to (Road distance agents)
       edges = [
-       edge 1 2 1.0 [],
+       edge 1 2 1.0 [{kind = bus, travelled = 0.0, speed = 0.07}],
        edge 2 4 1.0 [],
        edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
-       edge 4 6 1.0 [],
-       edge 5 3 1.0 [],
-       edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.01}],
+       edge 4 6 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05}],
+       edge 5 3 1.0 [{kind = bus2, travelled = 0.0, speed = 0.05}],
+       edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.05}],
        edge 7 6 1.0 []
       ]
   in
@@ -75,8 +76,8 @@ agentPositions : Network -> List Point
 agentPositions network =
   let go edge =
       let road = edge.label
-          fromPoint = Graph.get edge.from network |> getOrFail |> .node |> .label
-          toPoint = Graph.get edge.to network |> getOrFail |> .node |> .label
+          fromPoint = Graph.get edge.from network |> getOrFail "can't find fromPoint" |> .node |> .label
+          toPoint = Graph.get edge.to network |> getOrFail "can't find toPoint" |> .node |> .label
           length = road.length
           agents = road.agents
       in List.map (\a -> along fromPoint toPoint (a.travelled / length)) agents
@@ -122,7 +123,7 @@ translate agent = { agent | travelled <- agent.travelled + agent.speed }
 
 changeEdge : Agent -> NodeId -> NodeId
 changeEdge agent nid = case agent.kind of
-                         Bus route -> IntDict.get nid route |> getOrFail
+                         Bus route -> IntDict.get nid route |> getOrFail ("Bus can't find where to go after node " ++ (toString nid) ++ " in " ++ (toString <| IntDict.toList route))
 
 updateContext : NodeContext Point Road -> (List (Edge Road), List (Edge Road))
 updateContext ctx =

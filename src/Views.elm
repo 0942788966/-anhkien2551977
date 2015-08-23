@@ -11,7 +11,7 @@ import List as L
 import Color
 import Array
 import Debug
-import Network
+import RenderNetwork
 
 import EmailTexts exposing (emailTexts)
 import GameScreens exposing (..)
@@ -216,7 +216,7 @@ gameClock model =
 trafficGrid : Model -> Html
 trafficGrid model = 
     let
-        actualGame = Network.render model.network
+        actualGame = RenderNetwork.render model.network
     in
         Html.div [style [("float", "right")]] [Html.fromElement actualGame]
 

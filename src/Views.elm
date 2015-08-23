@@ -27,17 +27,17 @@ gameButton address action text =
                     ("width", "100px"),
                     ("height", "100px")
                   ]
-        ] 
+        ]
         [Html.text text]
 
 
 renderTitleScreen : Address Action -> Html
-renderTitleScreen address = 
+renderTitleScreen address =
         let
             titleBackgroundColor = Color.rgb 94 5 135
             titleImage = G.image 800 600 "../game_logo.png"
         in
-            Html.div 
+            Html.div
                 []
                 [   Html.fromElement <| titleImage,
                     gameButton address (GoToScreen <| MessageScreen 0)  "New Game",
@@ -68,12 +68,32 @@ renderChooseLevel address model =
            gameButton address (GoToScreen TitleScreen) "Return to title"
         ]
 
+
 renderMessageScreen : Int -> Address Action -> Html
 renderMessageScreen n address = case Array.get n emailTexts of
-    Just emailText -> Html.div []
-                        [emailTemplate emailText,
-                         gameButton address (GoToScreen <| LevelScreen 0) "Begin workday..."
+    Just emailText ->
+        Html.body [style
+                    [
+                        ("background-color", levelBackgroundCss),
+                        ("position", "absolute"),
+                        ("width", "100%"),
+                        ("height", "100%")
+                    ]
+                  ]
+             [
+                 Html.div
+                    [style [
+                        ("position", "absolute"),
+                        ("top", "20px"),
+                        ("left", "20px")
                         ]
+                    ]
+                    [
+                        emailTemplate emailText,
+                        gameButton address (GoToScreen <| LevelScreen 0) "Begin workday..."
+                    ]
+             ]
+
     Nothing -> Html.text "Error - no message for this message id"
 
 emailTemplate: Html -> Html
@@ -85,9 +105,11 @@ emailTemplate msg =
     in
     Html.div [style
                 [("backgroundColor", "rgb(94,5,135"),
+                 boxShadowCss,
                  ("width", "800px"),
                  ("height", "600px"),
-                 ("color", "white")
+                 ("color", "white"),
+                 ("padding", "5px")
                 ]
              ]
         [
@@ -145,12 +167,31 @@ gameClock model =
                         boxShadowCss,
                         ("left", "100px"),
                         ("top", "520px"),
-                        ("width", "200px"),
+                        ("width", "300px"),
                         ("height", "200px"),
                         whiteBackgroundCss
                       ]
 
-        clockCollage t =
+        timeDisplay : GameTime -> G.Element
+        timeDisplay (GameTime n) =
+            let
+                days = n // (60*24)
+                hours = (n // 60) % (24)
+                minutes = n % 60
+                timeFormat n = if
+                             | n == 0 -> "00"
+                             | n <= 9 -> "0" ++ (toString n)
+                             | otherwise -> (toString n)
+                timeString = (timeFormat hours) ++ ":" ++ (timeFormat minutes)
+                dateString = "Day: " ++ (toString (days + 1))
+            in
+               G.flow G.down
+               [
+                G.centered <| T.monospace <| T.fromString dateString,
+                G.centered <| T.monospace <| T.fromString timeString
+               ]
+
+        clockCollage =
             let 
                 timeInMin t = toFloat ((\(GameTime n) -> n) t)
                 hand len time =
@@ -158,7 +199,7 @@ gameClock model =
                        angle = degrees (90 - 6 * time)
                    in 
                       segment (0,0) (fromPolar (len, angle))
-                hourHand t = hand 50 (t/60) |> traced (solid Color.charcoal)
+                hourHand t = hand 50 (t/12) |> traced (solid Color.charcoal)
                 minuteHand t = hand 90 t |> traced (solid Color.orange)
             in
                 collage 200 200
@@ -169,7 +210,8 @@ gameClock model =
                         minuteHand <| timeInMin model.time
                     ]
     in
-       Html.div [style styleAttrs] [Html.fromElement <| clockCollage 0, Html.fromElement (G.show model.time)]
+       Html.div [style styleAttrs]
+       [Html.fromElement <| G.flow G.right [clockCollage, timeDisplay model.time]]
 
 trafficGrid : Model -> Html
 trafficGrid model = 

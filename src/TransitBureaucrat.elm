@@ -1,11 +1,13 @@
 module TransitBureaucrat where
 
+import Debug
 import Html exposing (Html)
 import StartApp exposing (start)
 import Signal exposing (Address)
 import Graphics.Element as G
 import Effects as E
 import Task
+import Time
 import Network
 
 import Views exposing (..)
@@ -14,15 +16,31 @@ import Model exposing (..)
 update : Action -> Model -> (Model, E.Effects Action)
 update action oldModel =
   let
-    newModel =  case action of
+    oldModelTime = Debug.watch "time" oldModel.realtimeMs
+    cxxxx = Debug.watch "counter" oldModel.counter
+    gameTime = Debug.watch "gametime" oldModel.time
+    readyForNewGameTick counter = counter >= oldModel.tickRate
+
+    newModel : Model
+    newModel = case action of
         GoToScreen newScreen -> { oldModel | screen <- newScreen }
         ToggleAdvancingTime -> { oldModel | timeAdvancing <- not oldModel.timeAdvancing }
-        Tick t -> if oldModel.timeAdvancing
-                  then { oldModel | time <- incrementTime oldModel.time,
-                               network <- Network.update oldModel.network
-                       }
-                  else oldModel
-  in (newModel, E.tick Tick)
+        TickRealtime t ->
+            if readyForNewGameTick oldModel.counter
+            then
+                let newTime = if oldModel.timeAdvancing then incrementTime oldModel.time else oldModel.time
+                    newNetwork = if oldModel.timeAdvancing then Network.update oldModel.network else oldModel.network
+                in  { oldModel | time <- newTime,
+                                 network <- newNetwork,
+                                 counter <- 0
+                    }
+            else
+                { oldModel | realtimeMs <- Time.inMilliseconds t,
+                            counter <- oldModel.counter + (floor <| Time.inMilliseconds t - oldModel.realtimeMs)
+                }
+
+  in (newModel, E.tick TickRealtime)
+
 
 view : Address Action -> Model -> Html
 view address model = case model.screen of

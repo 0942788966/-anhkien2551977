@@ -8,6 +8,9 @@ type ScreenState = TitleScreen | ChooseLevelScreen | LevelScreen Int | MessageSc
 
 type GameTime = GameTime Int
 
+incrementTime : GameTime -> GameTime
+incrementTime curTime = (\(GameTime n) -> GameTime (n+1)) curTime
+
 type Action = GoToScreen ScreenState
             | Tick Time
             | ToggleAdvancingTime
@@ -23,7 +26,8 @@ initialModel: Model
 initialModel = {
         numCars = 0,
         screen = TitleScreen,
-        time = GameTime 40,
+        time = GameTime 0,
         timeAdvancing = False,
         network = Network.example
     }
+

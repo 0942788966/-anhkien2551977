@@ -17,9 +17,11 @@ update action oldModel =
     newModel =  case action of
         GoToScreen newScreen -> { oldModel | screen <- newScreen }
         ToggleAdvancingTime -> { oldModel | timeAdvancing <- not oldModel.timeAdvancing }
-        Tick t -> { oldModel | time <- (\(GameTime n) -> GameTime (n+1)) oldModel.time,
+        Tick t -> if oldModel.timeAdvancing
+                  then { oldModel | time <- incrementTime oldModel.time,
                                network <- Network.update oldModel.network
-                  }
+                       }
+                  else oldModel
   in (newModel, E.tick Tick)
 
 view : Address Action -> Model -> Html

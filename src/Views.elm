@@ -176,5 +176,5 @@ trafficGrid model =
     let
         actualGame = Network.render model.network
     in
-        Html.div [style [("text-align", "right")]] [Html.text "Placeholder for game content", Html.fromElement actualGame]
+        Html.div [style [("float", "right")]] [Html.fromElement actualGame]
 

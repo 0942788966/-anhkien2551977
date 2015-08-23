@@ -4,7 +4,7 @@ import Color
 import Graphics.Element exposing (Element)
 import Graphics.Collage as GC
 import Signal exposing (foldp)
-import Time exposing (every, second)
+import Time exposing (fps)
 
 import Graph exposing (Graph, Node, Edge)
 
@@ -108,7 +108,7 @@ render net =
 updateEdge : Network -> Road -> Road
 updateEdge net road =
   let agents = road.agents
-      updatedAgents = List.map (\x -> {x | travelled <- x.travelled + 0.1}) agents
+      updatedAgents = List.map (\x -> {x | travelled <- x.travelled + 0.005}) agents
   in
     { road | agents <- updatedAgents }
 
@@ -118,6 +118,6 @@ update net = Graph.mapEdges (updateEdge net) net
 main : Signal Element
 main = 
   let initialState = example
-      state = foldp (\tick s -> update s) initialState (every second)
+      state = foldp (\tick s -> update s) initialState (fps 30)
   in
     Signal.map render state

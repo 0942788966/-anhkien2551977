@@ -1,7 +1,8 @@
 module Network where
 
 import Color
-import Graphics.Element exposing (Element)
+import Dict
+import Graphics.Element exposing (Element, show, flow, down)
 import Graphics.Collage as GC
 import Signal exposing (foldp)
 import Time exposing (fps)
@@ -54,12 +55,12 @@ example =
       edges = [
        edge 1 2 1.0 [],
        edge 2 4 1.0 [],
-       edge 2 7 (dist 1 2) [{kind = bus, speed = 0.01, travelled = 1.0}],
+       edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
        edge 3 4 1.0 [],
        edge 4 6 1.0 [],
        edge 5 3 1.0 [],
-       edge 6 5 1.0 [],
+       edge 6 5 1.0 [{kind = bus, travelled = 0.0, speed = 0.01}],
        edge 7 6 1.0 []
       ]
   in
@@ -79,8 +80,7 @@ agentPositions network =
           length = road.length
           agents = road.agents
       in List.map (\a -> along fromPoint toPoint (a.travelled / length)) agents
-  in List.concatMap go <| Graph.edges network
-
+  in (List.concatMap go <| Graph.edges network) |> Debug.watch "agentPositions"
 
 roadStyle : GC.LineStyle
 roadStyle = let def = GC.defaultLine in
@@ -115,7 +115,7 @@ render net =
     lines = List.map (GC.traced medianStyle) edgeLines
     agents = List.map (\pt -> GC.move (loc pt) <| GC.filled Color.red (GC.circle 10)) (agentPositions net)
   in
-    GC.collage 1500 1500 <| roads ++ lines ++ agents
+    GC.collage 800 800 <| roads ++ lines ++ agents
 
 translate : Agent -> Agent
 translate agent = { agent | travelled <- agent.travelled + agent.speed }
@@ -124,12 +124,12 @@ changeEdge : Agent -> NodeId -> NodeId
 changeEdge agent nid = case agent.kind of
                          Bus route -> IntDict.get nid route |> getOrFail
 
-updateContext : NodeContext Point Road -> (NodeContext Point Road, (NodeId, Graph.Adjacency Road))
+updateContext : NodeContext Point Road -> (List (Edge Road), List (Edge Road))
 updateContext ctx =
   let moveAgent from road agent =
         let moved = translate agent in
-        if moved.travelled > road.length
-        then ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- 0 })
+        if (moved.travelled > road.length)
+        then ((ctx.node.id, changeEdge agent ctx.node.id), { agent | travelled <- 0.0 })
         else ((from, ctx.node.id), moved)
       movedAgents (from, road) = List.map (moveAgent from road) road.agents
       moved = IntDict.toList ctx.incoming |> List.concatMap movedAgents
@@ -139,19 +139,25 @@ updateContext ctx =
 
       newIncoming = IntDict.map (\ nid road -> updateEdge (nid, ctx.node.id) road) ctx.incoming
       newOutgoing = IntDict.map (\ nid road -> updateEdge (ctx.node.id, nid) road) ctx.outgoing
+
+      newIncomingEdges = IntDict.toList newIncoming |> List.map (\(from,label) -> {from = from, to = ctx.node.id, label = label} )
+      newOutgoingEdges = IntDict.toList newOutgoing |> List.map (\(to,label) -> {from = ctx.node.id, to = to, label = label} )
   in
-    ({ ctx | incoming <- newIncoming }, (ctx.node.id, newOutgoing))
+    (newIncomingEdges, newOutgoingEdges)
 
 update : Network -> Network
 update net =
-  let go ctx (g, outs) = let (ctx', out') = updateContext ctx in (Graph.insert ctx' g, out'::outs)
-  -- The network with all the *incoming* edges updated
-      (net', outs) = Graph.fold go (Graph.empty, []) net
-      updateNode out x = case x of
-        Just ctx -> Just { ctx | outgoing <- IntDict.union ctx.outgoing out }
-        Nothing  -> Nothing
+  let go ctx (ins, outs) = let (in', out') = updateContext ctx in (ins ++ in', outs ++ out')
+      (ins, outs) = Graph.fold go ([], []) net
+
+      mergedEdges = let intsToInt x y = 2^x * 3^y
+                        insDict = IntDict.fromList <| List.map (\e -> (intsToInt e.from e.to, e)) ins
+                        outDict = IntDict.fromList <| List.map (\e -> (intsToInt e.from e.to, e)) outs
+                        united = IntDict.uniteWith (\key inE outE -> let inElabel = inE.label in {inE | label <- {inElabel | agents <- inE.label.agents ++ outE.label.agents}} ) insDict outDict
+                    in
+                      IntDict.values united
   in
-  List.foldl (\ (nid, out) net -> Graph.update nid (updateNode out) net) net' (outs |> Debug.watch "outs")
+    Graph.fromNodesAndEdges (Graph.nodes net) mergedEdges
 
 main : Signal Element
 main =

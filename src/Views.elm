@@ -27,17 +27,17 @@ gameButton address action text =
                     ("width", "100px"),
                     ("height", "100px")
                   ]
-        ] 
+        ]
         [Html.text text]
 
 
 renderTitleScreen : Address Action -> Html
-renderTitleScreen address = 
+renderTitleScreen address =
         let
             titleBackgroundColor = Color.rgb 94 5 135
             titleImage = G.image 800 600 "../game_logo.png"
         in
-            Html.div 
+            Html.div
                 []
                 [   Html.fromElement <| titleImage,
                     gameButton address (GoToScreen <| MessageScreen 0)  "New Game",
@@ -68,12 +68,32 @@ renderChooseLevel address model =
            gameButton address (GoToScreen TitleScreen) "Return to title"
         ]
 
+
 renderMessageScreen : Int -> Address Action -> Html
 renderMessageScreen n address = case Array.get n emailTexts of
-    Just emailText -> Html.div []
-                        [emailTemplate emailText,
-                         gameButton address (GoToScreen <| LevelScreen 0) "Begin workday..."
+    Just emailText ->
+        Html.body [style
+                    [
+                        ("background-color", levelBackgroundCss),
+                        ("position", "absolute"),
+                        ("width", "100%"),
+                        ("height", "100%")
+                    ]
+                  ]
+             [
+                 Html.div
+                    [style [
+                        ("position", "absolute"),
+                        ("top", "20px"),
+                        ("left", "20px")
                         ]
+                    ]
+                    [
+                        emailTemplate emailText,
+                        gameButton address (GoToScreen <| LevelScreen 0) "Begin workday..."
+                    ]
+             ]
+
     Nothing -> Html.text "Error - no message for this message id"
 
 emailTemplate: Html -> Html
@@ -85,9 +105,11 @@ emailTemplate msg =
     in
     Html.div [style
                 [("backgroundColor", "rgb(94,5,135"),
+                 boxShadowCss,
                  ("width", "800px"),
                  ("height", "600px"),
-                 ("color", "white")
+                 ("color", "white"),
+                 ("padding", "5px")
                 ]
              ]
         [

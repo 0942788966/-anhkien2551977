@@ -1,8 +1,7 @@
 module Network where
 
 import Color exposing (Color)
-import Graphics.Element exposing (Element, show, flow, down)
-import Graphics.Collage as GC
+import Graphics.Element exposing (Element)
 import Signal exposing (foldp)
 import Time exposing (fps)
 
@@ -11,35 +10,10 @@ import Graph exposing (Graph, Node, Edge, NodeContext, NodeId)
 
 import Debug
 
-type alias Point = { x : Float, y : Float }
-
-type alias Network = Graph Point Road
-
-type alias Road = {
-    length : Float,
-    agents : List Agent
-  }
-
-type alias Agent = {
-    kind      : AgentKind,
-    speed     : Float,
-    travelled : Float,
-    color     : Color,
-    lastEdge  : Maybe (NodeId, NodeId)
-  }
-
-type AgentKind = Bus BusRoute
-
-type alias BusRoute = IntDict NodeId
-
-getOrFail : String -> Maybe a -> a
-getOrFail ex maybe =
-  case maybe of
-    Just something -> something
-    Nothing -> Debug.crash ex
-
-dist : Float -> Float -> Float
-dist x y = sqrt (x^2 + y^2)
+import Types exposing (..)
+import Globals exposing (..)
+import Helpers exposing (..)
+import RenderNetwork exposing (render)
 
 routeFromList : List NodeId -> IntDict NodeId
 routeFromList x = case x of
@@ -71,61 +45,6 @@ example =
       ]
   in
   Graph.fromNodesAndEdges nodes edges
-
-along : Point -> Point -> Float -> Point
-along p1 p2 fraction = { x = (1 - fraction) * p1.x + fraction * p2.x
-                       , y = (1 - fraction) * p1.y + fraction * p2.y
-                       }
-
-agentPositions : Network -> List (Point, Agent, Float)
-agentPositions network =
-  let go edge =
-      let road = edge.label
-          fromPoint = Graph.get edge.from network |> getOrFail "can't find fromPoint" |> .node |> .label
-          toPoint = Graph.get edge.to network |> getOrFail "can't find toPoint" |> .node |> .label
-          angle = atan2 (toPoint.y - fromPoint.y) (toPoint.x - fromPoint.x)
-          length = road.length
-          agents = road.agents
-      in List.map (\a -> (along fromPoint toPoint (a.travelled / length), a, angle)) agents
-  in (List.concatMap go <| Graph.edges network) |> Debug.watch "agentPositions"
-
-roadStyle : GC.LineStyle
-roadStyle = let def = GC.defaultLine in
-            { def | width <- size * 10, cap <- GC.Round }
-
-medianStyle : GC.LineStyle
-medianStyle = let def = GC.defaultLine in
-            { def | width <- size / 2,
-                    cap <- GC.Round,
-                    color <- Color.yellow,
-                    dashing <- [8 * round size, 4 * round size] }
-
-size : Float
-size = 2.5
-
-padding : Float
-padding = 0.18
-
-loc : Point -> (Float, Float)
-loc n = (size * 50 * n.x, size * 50 * n.y)
-
-getNodes : Network -> Edge Road -> Maybe (Point, Point)
-getNodes net edge = case (Graph.get edge.from net, Graph.get edge.to net) of
-                      (Just x, Just y) -> Just (x.node.label, y.node.label)
-                      _                -> Nothing
-
-
-render : Network -> Element
-render net =
-  let
-    edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
-    edgeLines = List.map (\ (n1, n2) -> GC.segment (loc n1) (loc n2)) edgeNodePairs
-
-    roads = List.map (GC.traced roadStyle) edgeLines
-    lines = List.map (GC.traced medianStyle) edgeLines
-    agents = List.map (\(pt, agent, angle) -> GC.rotate angle <| GC.move (loc pt) <| GC.filled agent.color (GC.rect 20 12)) (agentPositions net)
-  in
-    GC.collage 800 800 <| roads ++ lines ++ agents
 
 translate : Agent -> Float -> Agent
 translate agent maxTravelled =
@@ -199,7 +118,3 @@ main =
       state = foldp (\tick s -> update s) initialState (fps 30)
   in
     Signal.map render state
-
-watchIf : String -> Bool -> a -> a
-watchIf str bool value =
-  if bool then Debug.watch str value else value

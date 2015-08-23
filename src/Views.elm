@@ -136,15 +136,19 @@ renderLevel levelNum address model =
                 ]
              ]
     [
-        controlPane [
-            gameButton address ToggleAdvancingTime "Delay traffic",
-            gameButton address (GoToScreen TitleScreen) "Return to title",
-            gameButton address ToggleAdvancingTime "Toggle time"
-
+        Html.div []
+        [
+            controlPane [
+                gameButton address ResetTime "Reset",
+                gameButton address (GoToScreen TitleScreen) "Return to title",
+                gameButton address ToggleAdvancingTime "Toggle time"
+                ],
+            gameClock model
         ],
 
-        gameClock model,
-        trafficGrid model
+        Html.div [style [("position", "absolute"), ("right", "20px"), ("top", "10px")]]
+            --[Html.fromElement <| trafficGrid model]
+            [Html.fromElement <| trafficGrid model]
     ]
 
 controlPane : List Html -> Html
@@ -213,10 +217,6 @@ gameClock model =
        Html.div [style styleAttrs]
        [Html.fromElement <| G.flow G.right [clockCollage, timeDisplay model.time]]
 
-trafficGrid : Model -> Html
-trafficGrid model = 
-    let
-        actualGame = RenderNetwork.render model.network
-    in
-        Html.div [style [("float", "right")]] [Html.fromElement actualGame]
+trafficGrid : Model -> G.Element
+trafficGrid model = RenderNetwork.render model.network
 

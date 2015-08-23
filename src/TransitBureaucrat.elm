@@ -16,9 +16,6 @@ import Model exposing (..)
 update : Action -> Model -> (Model, E.Effects Action)
 update action oldModel =
   let
-    oldModelTime = Debug.watch "time" oldModel.realtimeMs
-    cxxxx = Debug.watch "counter" oldModel.counter
-    gameTime = Debug.watch "gametime" oldModel.time
     readyForNewGameTick counter = counter >= oldModel.tickRate
 
     newModel : Model
@@ -38,6 +35,14 @@ update action oldModel =
                 { oldModel | realtimeMs <- Time.inMilliseconds t,
                             counter <- oldModel.counter + (floor <| Time.inMilliseconds t - oldModel.realtimeMs)
                 }
+
+        ResetTime -> { oldModel | realtimeMs <- 0,
+                                  time <- GameTime 0,
+                                  timeAdvancing <- False,
+                                  counter <- 0,
+                                  network <- Network.example
+                     }
+
 
   in (newModel, E.tick TickRealtime)
 

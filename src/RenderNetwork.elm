@@ -11,7 +11,7 @@ import Types exposing (..)
 import Helpers exposing (..)
 
 size : Float
-size = 2.5
+size = 3.5
 
 roadStyle : GC.LineStyle
 roadStyle = let def = GC.defaultLine in
@@ -47,7 +47,13 @@ getNodes net edge =
 
 renderAgent : (Coords, Agent, Float) -> Form
 renderAgent (coords, agent, angle) =
-  GC.rotate angle <| GC.move (loc coords) <| GC.filled agent.color <| GC.rect (renderedSizeOf agent) 12
+    let
+        renderedSize =
+            case agent.kind of
+                Bus _ -> 25
+                Car _ -> 20
+    in
+        GC.rotate angle <| GC.move (loc coords) <| GC.filled agent.color <| GC.rect renderedSize 12
 
 renderPoint : Point -> Form
 renderPoint point =
@@ -76,12 +82,14 @@ renderNetwork net =
     roads = List.map (GC.traced roadStyle) edgeLines
     lines = List.map (GC.traced medianStyle) edgeLines
     agents = List.map renderAgent (agentPositions net)
+        
+    globalTransform = (-200.0, -100.0)
+    mapGroup = GC.move globalTransform (GC.group <| roads ++ lines ++ busStops ++ agents)
   in
-    GC.collage 800 800 <| roads ++ lines ++ busStops ++ agents
+    GC.collage 1000 800 <| [mapGroup]
 
 render : State -> Element
 render (State network metrics) =
   flow down [ show metrics 
             , renderNetwork network
             ]
-

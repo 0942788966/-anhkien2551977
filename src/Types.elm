@@ -55,12 +55,6 @@ sizeOf agent =
     Bus _ -> 0.2
     Car _ -> 0.16
 
-renderedSizeOf : Agent -> Float
-renderedSizeOf agent =
-  case agent.kind of
-    Bus _ -> 20
-    Car _ -> 12
-
 busDistanceTravelled : Agent -> Float
 busDistanceTravelled agent =
   case agent.kind of

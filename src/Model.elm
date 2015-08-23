@@ -16,7 +16,7 @@ incrementTime curTime = (\(GameTime n) -> GameTime (n+1)) curTime
 
 type Action = GoToScreen ScreenState
             | TickRealtime Time
-            | TickGametime
+            | ResetTime
             | ToggleAdvancingTime
 
 type alias Model = { numCars: Int,

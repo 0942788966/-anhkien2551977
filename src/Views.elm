@@ -145,12 +145,31 @@ gameClock model =
                         boxShadowCss,
                         ("left", "100px"),
                         ("top", "520px"),
-                        ("width", "200px"),
+                        ("width", "300px"),
                         ("height", "200px"),
                         whiteBackgroundCss
                       ]
 
-        clockCollage t =
+        timeDisplay : GameTime -> G.Element
+        timeDisplay (GameTime n) =
+            let
+                days = n // (60*24)
+                hours = (n // 60) % (24)
+                minutes = n % 60
+                timeFormat n = if
+                             | n == 0 -> "00"
+                             | n <= 9 -> "0" ++ (toString n)
+                             | otherwise -> (toString n)
+                timeString = (timeFormat hours) ++ ":" ++ (timeFormat minutes)
+                dateString = "Day: " ++ (toString (days + 1))
+            in
+               G.flow G.down
+               [
+                G.centered <| T.monospace <| T.fromString dateString,
+                G.centered <| T.monospace <| T.fromString timeString
+               ]
+
+        clockCollage =
             let 
                 timeInMin t = toFloat ((\(GameTime n) -> n) t)
                 hand len time =
@@ -158,7 +177,7 @@ gameClock model =
                        angle = degrees (90 - 6 * time)
                    in 
                       segment (0,0) (fromPolar (len, angle))
-                hourHand t = hand 50 (t/60) |> traced (solid Color.charcoal)
+                hourHand t = hand 50 (t/12) |> traced (solid Color.charcoal)
                 minuteHand t = hand 90 t |> traced (solid Color.orange)
             in
                 collage 200 200
@@ -169,7 +188,8 @@ gameClock model =
                         minuteHand <| timeInMin model.time
                     ]
     in
-       Html.div [style styleAttrs] [Html.fromElement <| clockCollage 0, Html.fromElement (G.show model.time)]
+       Html.div [style styleAttrs]
+       [Html.fromElement <| G.flow G.right [clockCollage, timeDisplay model.time]]
 
 trafficGrid : Model -> Html
 trafficGrid model = 

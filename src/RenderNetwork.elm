@@ -46,11 +46,14 @@ getNodes net edge = case (Graph.get edge.from net, Graph.get edge.to net) of
 render : Network -> Element
 render net =
   let
+    points = Graph.nodes net |> List.map .label
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
     edgeLines = List.map (\ (n1, n2) -> GC.segment (loc n1) (loc n2)) edgeNodePairs
 
+    busStops = points |> List.filterMap (\p -> case p.kind of BusStop props -> Just (GC.move (loc p.coords) <| GC.filled Color.lightBlue <| GC.circle (max 2 <| min 10 (props.currentlyWaiting / 5)))
+                                                              otherwise -> Nothing)
     roads = List.map (GC.traced roadStyle) edgeLines
     lines = List.map (GC.traced medianStyle) edgeLines
-    agents = List.map (\(pt, agent, angle) -> GC.rotate angle <| GC.move (loc pt) <| GC.filled agent.color (GC.rect (renderedSizeOf agent) 12)) (agentPositions net)
+    agents = List.map (\(pt, agent, angle) -> GC.rotate angle <| GC.move (loc pt) <| GC.filled agent.color <| GC.rect (renderedSizeOf agent) 12) (agentPositions net)
   in
-    GC.collage 800 800 <| roads ++ lines ++ agents
+    GC.collage 800 800 <| roads ++ lines ++ busStops ++ agents

@@ -41,6 +41,9 @@ example =
   in
   Graph.fromNodesAndEdges nodes edges
 
+pickUpSpeed : Float
+pickUpSpeed = 1.0
+
 moveAgents : NodeContext Point Road -> List ((NodeId, NodeId), Agent)
 moveAgents ctx =
   let moveRoad (from, road) =
@@ -75,11 +78,11 @@ updateContext ctx =
   in
     (newIncomingEdges, newOutgoingEdges)
 
-updatePoint : List (Edge Road) -> Point -> Point
-updatePoint edge point =
+updatePoint : List (Edge Road) -> NodeId -> Point -> Point
+updatePoint edges id point =
   case point.kind of
-    BusStop props -> let newProps = if False
-                                    then { props | currentlyWaiting <- props.currentlyWaiting - 10 }
+    BusStop props -> let newProps = if List.any (\e -> e.to == id && List.any (\a -> a.travelled == e.label.length) e.label.agents) edges
+                                    then { props | currentlyWaiting <- props.currentlyWaiting - pickUpSpeed }
                                     else { props | currentlyWaiting <- props.currentlyWaiting + props.waitingDelta }
                         in
                           { point | kind <- BusStop newProps}
@@ -97,7 +100,7 @@ update net =
                     in
                       IntDict.values united
 
-      newNodes = List.map (\n -> {n | label <- updatePoint mergedEdges n.label} |> watchIf "point" (n.id == 7)) (Graph.nodes net)
+      newNodes = Graph.nodes net |> List.map (\n -> {n | label <- updatePoint mergedEdges n.id n.label} |> watchIf "point" (n.id == 7))
   in
     Graph.fromNodesAndEdges newNodes mergedEdges
 

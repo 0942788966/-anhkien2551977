@@ -46,3 +46,10 @@ renderedSizeOf agent =
   case agent.kind of
     Bus _ -> 20
     Car _ -> 12
+
+canMoveThrough : Agent -> Point -> Bool
+canMoveThrough agent point =
+  case (point.kind, agent.kind) of
+    (BusStop props, Bus _) -> props.currentlyWaiting <= 1.0
+    (BusStop props, _) -> True
+    (Intersection, _) -> True

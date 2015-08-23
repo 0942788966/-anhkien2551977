@@ -11,6 +11,7 @@ import List as L
 import Color
 import Array
 import Debug
+import Network
 
 import EmailTexts exposing (emailTexts)
 import GameScreens exposing (..)
@@ -121,7 +122,7 @@ renderLevel levelNum address model =
         ],
 
         gameClock model,
-        trafficGrid
+        trafficGrid model
     ]
 
 controlPane : List Html -> Html
@@ -170,5 +171,10 @@ gameClock model =
     in
        Html.div [style styleAttrs] [Html.fromElement <| clockCollage 0, Html.fromElement (G.show model.time)]
 
-trafficGrid : Html
-trafficGrid = Html.div [style [("text-align", "right")]] [Html.text "Placeholder for game content"]
+trafficGrid : Model -> Html
+trafficGrid model = 
+    let
+        actualGame = Network.render model.network
+    in
+        Html.div [style [("text-align", "right")]] [Html.text "Placeholder for game content", Html.fromElement actualGame]
+

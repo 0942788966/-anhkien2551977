@@ -6,6 +6,7 @@ import Signal exposing (Address)
 import Graphics.Element as G
 import Effects as E
 import Task
+import Network
 
 import Views exposing (..)
 import Model exposing (..)
@@ -16,7 +17,9 @@ update action oldModel =
     newModel =  case action of
         GoToScreen newScreen -> { oldModel | screen <- newScreen }
         ToggleAdvancingTime -> { oldModel | timeAdvancing <- not oldModel.timeAdvancing }
-        Tick t -> { oldModel | time <- (\(GameTime n) -> GameTime (n+1)) oldModel.time }
+        Tick t -> { oldModel | time <- (\(GameTime n) -> GameTime (n+1)) oldModel.time,
+                               network <- Network.update oldModel.network
+                  }
   in (newModel, E.tick Tick)
 
 view : Address Action -> Model -> Html

@@ -50,8 +50,8 @@ renderAgent (coords, agent, angle) =
     let
         renderedSize =
             case agent.kind of
-                Bus _ -> 20
-                Car _ -> 12
+                Bus _ -> 25
+                Car _ -> 20
     in
         GC.rotate angle <| GC.move (loc coords) <| GC.filled agent.color <| GC.rect renderedSize 12
 

@@ -139,7 +139,7 @@ renderLevel levelNum address model =
         Html.div []
         [
             controlPane [
-                gameButton address ToggleAdvancingTime "Delay traffic",
+                gameButton address ResetTime "Reset",
                 gameButton address (GoToScreen TitleScreen) "Return to title",
                 gameButton address ToggleAdvancingTime "Toggle time"
                 ],

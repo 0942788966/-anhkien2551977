@@ -39,6 +39,14 @@ update action oldModel =
                             counter <- oldModel.counter + (floor <| Time.inMilliseconds t - oldModel.realtimeMs)
                 }
 
+        ResetTime -> { oldModel | realtimeMs <- 0,
+                                  time <- GameTime 0,
+                                  timeAdvancing <- False,
+                                  counter <- 0,
+                                  network <- Network.example
+                     }
+
+
   in (newModel, E.tick TickRealtime)
 
 

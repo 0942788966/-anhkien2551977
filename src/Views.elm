@@ -5,10 +5,12 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (style)
 import Signal exposing (Address)
 import Graphics.Element as G
+import Graphics.Collage exposing (..)
 import Text as T
 import List as L
 import Color
 import Array
+import Debug
 
 import EmailTexts exposing (emailTexts)
 import GameScreens exposing (..)
@@ -65,15 +67,6 @@ renderChooseLevel address model =
            gameButton address (GoToScreen TitleScreen) "Return to title"
         ]
 
-renderLevel : Int -> Address Action -> Model -> Html
-renderLevel levelNum address model = 
-    Html.div []
-    [
-        Html.fromElement <| G.flow G.down [title, mainGamePane, clock],
-        gameButton address Tick "Delay traffic",
-        gameButton address (GoToScreen TitleScreen) "Return to title"
-    ]
-
 renderMessageScreen : Int -> Address Action -> Html
 renderMessageScreen n address = case Array.get n emailTexts of
     Just emailText -> Html.div []
@@ -106,11 +99,74 @@ emailTemplate msg =
             msg
         ]
 
-title : G.Element
-title = G.show "Transit Bureaucrat"
+levelBackgroundCss = "rgb(140, 59, 177)"
+boxShadowCss = ("box-shadow", "5px 5px 10px #222222")
+whiteBackgroundCss = ("background-color", "white")
 
-mainGamePane : G.Element
-mainGamePane = G.show "main pane"
+renderLevel : Int -> Address Action -> Model -> Html
+renderLevel levelNum address model = 
+    Html.body [style
+                [("background-color", levelBackgroundCss),
+                 ("position", "absolute"),
+                 ("width", "100%"),
+                 ("height", "100%")
+                ]
+             ]
+    [
+        controlPane [
+            gameButton address Tick "Delay traffic",
+            gameButton address (GoToScreen TitleScreen) "Return to title"
+        ],
 
-clock: G.Element
-clock = G.show "clock"
+        gameClock,
+        trafficGrid
+    ]
+
+controlPane : List Html -> Html
+controlPane contents =
+   let styleAttrs = [("position", "absolute"),
+                     boxShadowCss,
+                     ("width", "400px"),
+                     ("height", "500px"),
+                     ("left", "10px"),
+                     ("top", "10px"),
+                     whiteBackgroundCss
+                    ]
+   in
+      Html.div [style styleAttrs] contents
+
+gameClock: Html
+gameClock =
+    let styleAttrs = [
+                        ("position", "absolute"),
+                        boxShadowCss,
+                        ("left", "100px"),
+                        ("top", "520px"),
+                        ("width", "200px"),
+                        ("height", "200px"),
+                        whiteBackgroundCss
+                      ]
+
+        clockCollage t =
+            let 
+                hand len time =
+                   let
+                       angle = degrees (90 - 6 * time)
+                   in 
+                      segment (0,0) (fromPolar (len, angle))
+                hourHand t = hand 50 (t/60) |> traced (solid Color.charcoal)
+                minuteHand t = hand 90 t |> traced (solid Color.orange)
+                timeInMinutes = 540
+            in
+                collage 200 200
+                    [ 
+                        filled Color.lightGrey (ngon 30 90),
+                        outlined (solid Color.grey) (ngon 30 90),
+                        hourHand timeInMinutes,
+                        minuteHand timeInMinutes
+                    ]
+    in
+       Html.div [style styleAttrs] [Html.fromElement <| clockCollage 0]
+
+trafficGrid : Html
+trafficGrid = Html.div [style [("text-align", "right")]] [Html.text "Placeholder for game content"]

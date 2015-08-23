@@ -1,3 +1,5 @@
+module TransitBureaucrat where
+
 import Html exposing (Html)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (style)

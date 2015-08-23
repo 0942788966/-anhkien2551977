@@ -15,7 +15,7 @@ type alias Point = {
 }
 
 type PointKind = Intersection
-               | BusStop { delay : Float }
+               | BusStop { currentlyWaiting : Float, waitingDelta : Float }
 
 type alias Road = {
     length : Float,

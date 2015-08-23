@@ -20,9 +20,9 @@ example =
       bus2 = Bus <| routeFromList [6, 5, 3, 4]
       car = Car <| routeFromList [6, 5, 3, 4]
 
-      points = List.map (\c -> {coords = c, kind = Intersection}) <| List.map (uncurry Coords) [
-       (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0), (2.25,2.0)
-      ]
+      points = (List.map (\c -> {coords = c, kind = Intersection}) <| List.map (uncurry Coords) [
+       (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0)
+      ]) ++ [{coords = {x = 2.25, y =2.0}, kind = BusStop {currentlyWaiting = 0.0, waitingDelta = 0.5}}]
       nodes = List.map2 Node [1..7] points
       
       edge from to distance agents = Edge from to (Road distance agents)
@@ -75,6 +75,16 @@ updateContext ctx =
   in
     (newIncomingEdges, newOutgoingEdges)
 
+updatePoint : List (Edge Road) -> Point -> Point
+updatePoint edge point =
+  case point.kind of
+    BusStop props -> let newProps = if False
+                                    then { props | currentlyWaiting <- props.currentlyWaiting - 10 }
+                                    else { props | currentlyWaiting <- props.currentlyWaiting + props.waitingDelta }
+                        in
+                          { point | kind <- BusStop newProps}
+    Intersection -> point
+
 update : Network -> Network
 update net =
   let go ctx (ins, outs) = let (in', out') = updateContext ctx in (ins ++ in', outs ++ out')
@@ -86,8 +96,10 @@ update net =
                         united = IntDict.uniteWith (\key inE outE -> let inElabel = inE.label in {inE | label <- {inElabel | agents <- inE.label.agents ++ outE.label.agents}} ) insDict outDict
                     in
                       IntDict.values united
+
+      newNodes = List.map (\n -> {n | label <- updatePoint mergedEdges n.label} |> watchIf "point" (n.id == 7)) (Graph.nodes net)
   in
-    Graph.fromNodesAndEdges (Graph.nodes net) mergedEdges
+    Graph.fromNodesAndEdges newNodes mergedEdges
 
 main : Signal Element
 main =

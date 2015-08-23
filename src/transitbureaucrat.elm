@@ -68,7 +68,8 @@ renderLevel levelNum address model =
     Html.div []
     [
         Html.fromElement <| G.flow G.down [title, mainGamePane, clock],
-        Html.button [ onClick address (GoToScreen TitleScreen) ] [Html.text "Return to title"]
+        gameButton address Tick "Delay traffic",
+        gameButton address (GoToScreen TitleScreen) "Return to title"
     ]
 
 renderMessageScreen : Int -> Address Action -> Html

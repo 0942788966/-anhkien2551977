@@ -16,6 +16,7 @@ type alias Point = {
 
 type PointKind = Intersection
                | BusStop { currentlyWaiting : Float, waitingDelta : Float }
+               | CarSpawner { route : Route, interval : Float, nextIn : Float, startEdge : (NodeId, NodeId) }
 
 type alias Road = {
     length : Float,
@@ -51,5 +52,4 @@ canMoveThrough : Agent -> Point -> Bool
 canMoveThrough agent point =
   case (point.kind, agent.kind) of
     (BusStop props, Bus _) -> props.currentlyWaiting <= 1.0
-    (BusStop props, _) -> True
-    (Intersection, _) -> True
+    _                      -> True

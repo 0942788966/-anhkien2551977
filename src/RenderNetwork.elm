@@ -39,9 +39,10 @@ loc : Coords -> (Float, Float)
 loc n = (size * 50 * n.x, size * 50 * n.y)
 
 getNodes : Network -> Edge Road -> Maybe (Coords, Coords)
-getNodes net edge = case (Graph.get edge.from net, Graph.get edge.to net) of
-                      (Just x, Just y) -> Just (x.node.label.coords, y.node.label.coords)
-                      _                -> Nothing
+getNodes net edge = 
+  case (Graph.get edge.from net, Graph.get edge.to net) of
+    (Just x, Just y) -> Just (x.node.label.coords, y.node.label.coords)
+    _                -> Nothing
 
 renderAgent : (Coords, Agent, Float) -> Form
 renderAgent (coords, agent, angle) =
@@ -53,7 +54,7 @@ renderPoint point =
     BusStop props -> let size = max 2 <| min 10 (props.currentlyWaiting / 5)
                      in
                        GC.move (loc point.coords) <| GC.filled Color.lightBlue <| GC.circle size
-    Intersection  -> GC.toForm Element.empty
+    _             -> GC.toForm Element.empty
 
 render : Network -> Element
 render net =

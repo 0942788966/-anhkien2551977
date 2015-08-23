@@ -4,21 +4,15 @@ import Color exposing (Color)
 import Graphics.Element exposing (Element)
 import Signal exposing (foldp)
 import Time exposing (fps)
+import Debug
 
 import IntDict exposing (IntDict)
 import Graph exposing (Graph, Node, Edge, NodeContext, NodeId)
-
-import Debug
 
 import Types exposing (..)
 import Helpers exposing (..)
 import RenderNetwork exposing (render)
 import Agent
-
-routeFromList : List NodeId -> IntDict NodeId
-routeFromList x = case x of
-  []    -> IntDict.empty
-  n::ns -> IntDict.fromList <| List.map2 (,) (n::ns) (ns ++ [n])
 
 example : Network
 example =
@@ -26,7 +20,7 @@ example =
       bus2 = Bus <| routeFromList [6, 5, 3, 4]
       car = Car <| routeFromList [6, 5, 3, 4]
 
-      points = List.map (uncurry Point) [
+      points = List.map (\c -> {coords = c, kind = Intersection}) <| List.map (uncurry Coords) [
        (0.0,0.0), (1.0,0.0), (0.0,1.0), (1.0,1.0), (0.0,2.0), (1.0,2.0), (2.25,2.0)
       ]
       nodes = List.map2 Node [1..7] points

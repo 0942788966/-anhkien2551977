@@ -23,24 +23,24 @@ medianStyle = let def = GC.defaultLine in
                     color <- Color.yellow,
                     dashing <- [8 * round size, 4 * round size] }
 
-agentPositions : Network -> List (Point, Agent, Float)
+agentPositions : Network -> List (Coords, Agent, Float)
 agentPositions network =
   let go edge =
       let road = edge.label
-          fromPoint = Graph.get edge.from network |> getOrFail "can't find fromPoint" |> .node |> .label
-          toPoint = Graph.get edge.to network |> getOrFail "can't find toPoint" |> .node |> .label
-          angle = atan2 (toPoint.y - fromPoint.y) (toPoint.x - fromPoint.x)
+          fromCoords = Graph.get edge.from network |> getOrFail "can't find fromCoords" |> .node |> .label |> .coords
+          toCoords = Graph.get edge.to network |> getOrFail "can't find toCoords" |> .node |> .label |> .coords
+          angle = atan2 (toCoords.y - fromCoords.y) (toCoords.x - fromCoords.x)
           length = road.length
           agents = road.agents
-      in List.map (\a -> (interpolate fromPoint toPoint (a.travelled / length), a, angle)) agents
+      in List.map (\a -> (interpolate fromCoords toCoords (a.travelled / length), a, angle)) agents
   in (List.concatMap go <| Graph.edges network)
 
-loc : Point -> (Float, Float)
+loc : Coords -> (Float, Float)
 loc n = (size * 50 * n.x, size * 50 * n.y)
 
-getNodes : Network -> Edge Road -> Maybe (Point, Point)
+getNodes : Network -> Edge Road -> Maybe (Coords, Coords)
 getNodes net edge = case (Graph.get edge.from net, Graph.get edge.to net) of
-                      (Just x, Just y) -> Just (x.node.label, y.node.label)
+                      (Just x, Just y) -> Just (x.node.label.coords, y.node.label.coords)
                       _                -> Nothing
 
 render : Network -> Element

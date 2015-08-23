@@ -2,7 +2,10 @@ module Helpers where
 
 import Debug
 
-import Types exposing (Point)
+import Graph exposing (NodeId)
+import IntDict
+
+import Types exposing (Coords, Route)
 
 getOrFail : String -> Maybe a -> a
 getOrFail ex maybe =
@@ -17,7 +20,12 @@ watchIf str bool value =
 dist : Float -> Float -> Float
 dist x y = sqrt (x^2 + y^2)
 
-interpolate : Point -> Point -> Float -> Point
+interpolate : Coords -> Coords -> Float -> Coords
 interpolate p1 p2 fraction = { x = (1 - fraction) * p1.x + fraction * p2.x
                              , y = (1 - fraction) * p1.y + fraction * p2.y
                              }
+
+routeFromList : List NodeId -> Route
+routeFromList x = case x of
+  []    -> IntDict.empty
+  n::ns -> IntDict.fromList <| List.map2 (,) (n::ns) (ns ++ [n])

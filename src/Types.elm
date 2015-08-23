@@ -5,9 +5,17 @@ import Color exposing (Color)
 import IntDict exposing (IntDict)
 import Graph exposing (Graph, Node, Edge, NodeContext, NodeId)
 
-type alias Point = { x : Float, y : Float }
+type alias Coords = { x : Float, y : Float }
 
 type alias Network = Graph Point Road
+
+type alias Point = {
+    coords : Coords,
+    kind   : PointKind
+}
+
+type PointKind = Intersection
+               | BusStop { delay : Float }
 
 type alias Road = {
     length : Float,

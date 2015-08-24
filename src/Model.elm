@@ -86,7 +86,11 @@ levelDataForScreen screen = case screen of
         Just params -> let input = List.map (\s -> Dict.get s params.stopToNodeMapping |> getOrFail ("unknown bus stop " ++ s)) params.stops
                            state = Types.State (params.level input) Dict.empty
                          in 
-                           { defaultLevelData | state <- state, stops <- params.stops, stopToNodeMapping <- params.stopToNodeMapping, changesRemaining <- params.changeLimit }
+                           { defaultLevelData | state <- state, 
+                                                networkGenerator <- params.level,
+                                                stops <- params.stops, 
+                                                stopToNodeMapping <- params.stopToNodeMapping, 
+                                                changesRemaining <- params.changeLimit }
         Nothing -> Debug.crash ("Level not found: " ++ toString n)
     _ -> defaultLevelData
 

@@ -29,13 +29,15 @@ type StopDirection = StopUp | StopDown | MakeActiveStopIndex Int
 
 type alias LevelData = {
     stops: List BusStop,
-    activeStopIdx: Maybe Int
+    activeStopIdx: Maybe Int,
+    changesRemaining: Int
 }
 
 defaultLevelData : LevelData
 defaultLevelData = { 
     stops = [],
-    activeStopIdx = Nothing
+    activeStopIdx = Nothing,
+    changesRemaining = 3
     }
                 
 

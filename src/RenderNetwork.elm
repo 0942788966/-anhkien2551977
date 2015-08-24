@@ -63,7 +63,8 @@ renderPoint point =
                           crowdCircle = GC.filled Color.lightBlue <| GC.circle crowdSize
                           busSign = GC.group [ GC.traced GC.defaultLine <| GC.segment (0,0) (-20,50)
                                              , GC.move (-20,50) <| GC.filled Color.yellow <| GC.circle 15
-                                             , GC.rotate (degrees 22.5) <| GC.move (-20,50) <| GC.text <| Text.fromString "BUS"
+                                             , GC.rotate (degrees 22.5) <| GC.move (-24,59) <| GC.text <| Text.height 8 <| Text.fromString "BUS"
+                                             , GC.rotate (degrees 22.5) <| GC.move (-19,48) <| GC.text <| Text.height 20 <| Text.fromString props.label
                                              ]
                       in
                         GC.move (addCoords (-size*5,size*5) (loc point.coords)) <| GC.group [crowdCircle, busSign]
@@ -72,20 +73,26 @@ renderPoint point =
                                ] |> GC.move (addCoords (-size*5,size*5) (loc point.coords))
     _              -> GC.toForm Element.empty
 
+renderRoad : (Coords, Coords) -> Form
+renderRoad (n1, n2) =
+  let segment = GC.segment (loc n1) (loc n2)
+
+      mainRoad = GC.traced roadStyle segment
+      divider = GC.traced medianStyle segment
+  in (GC.group [mainRoad, divider])
+
 renderNetwork : Float -> Network -> Element
 renderNetwork scale net =
   let
     points = Graph.nodes net |> List.map .label
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
-    edgeLines = List.map (\ (n1, n2) -> GC.segment (loc n1) (loc n2)) edgeNodePairs
 
+    roads = List.map renderRoad edgeNodePairs
     busStops = List.map renderPoint points
-    roads = List.map (GC.traced roadStyle) edgeLines
-    lines = List.map (GC.traced medianStyle) edgeLines
     agents = List.map renderAgent (agentPositions net)
         
     globalTransform = (-200.0, -100.0)
-    mapGroup = GC.move globalTransform (GC.group <| roads ++ lines ++ busStops ++ agents)
+    mapGroup = GC.move globalTransform (GC.group <| roads ++ busStops ++ agents)
   in
     GC.collage 1000 800 <| [GC.scale scale mapGroup]
 

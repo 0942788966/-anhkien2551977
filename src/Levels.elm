@@ -125,7 +125,7 @@ lvl3 input =
         , { id = 7, label =  { coords = { x = -250, y = 100  }, kind = Intersection } }
         , { id = 8, label =  { coords = { x = -150, y = -200 }, kind = BusStop {label = "A", currentlyWaiting = 0.0, waitingDelta = 0.1} } }
         , { id = 9, label =  { coords = { x = -100, y = -400 }, kind = Intersection } }
-        , { id = 10, label = { coords = { x = -100, y = -100 }, kind = Intersection } }
+        , { id = 10, label = { coords = { x = -100, y = -100 }, kind = StopSign {delay = 8, currentDelay = 0.0} } }
         , { id = 11, label = { coords = { x = -100, y = 0    }, kind = Intersection } }
         , { id = 12, label = { coords = { x = -100, y = 100  }, kind = Intersection } }
         , { id = 13, label = { coords = { x = 0,    y = -100 }, kind = Intersection } }
@@ -134,8 +134,8 @@ lvl3 input =
         , { id = 16, label = { coords = { x = 50,   y = -200 }, kind = BusStop {label = "B", currentlyWaiting = 0.0, waitingDelta = 0.1} } }
         , { id = 17, label = { coords = { x = 100,  y = -300 }, kind = Intersection } }
         , { id = 18, label = { coords = { x = 100,  y = -100 }, kind = BusStop {label = "D", currentlyWaiting = 0.0, waitingDelta = 0.1} } }
-        , { id = 19, label = { coords = { x = 100,  y = 0    }, kind = Intersection } }
-        , { id = 20, label = { coords = { x = 150,  y = -200 }, kind = Intersection } }
+        , { id = 19, label = { coords = { x = 100,  y = 0    }, kind = StopSign {delay = 8, currentDelay = 0.0} } }
+        , { id = 20, label = { coords = { x = 150,  y = -200 }, kind = StopSign {delay = 8, currentDelay = 0.0} } }
         , { id = 21, label = { coords = { x = 200,  y = -100 }, kind = Intersection } }
         , { id = 22, label = { coords = { x = 200,  y = 0    }, kind = Intersection } }
         , { id = 23, label = { coords = { x = 200,  y = 100  }, kind = Intersection } }

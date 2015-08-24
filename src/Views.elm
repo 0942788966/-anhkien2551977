@@ -283,7 +283,8 @@ trafficGrid model =
   in
     case ld.state of
       Types.State network metrics -> 
-        let networkGrid = RenderNetwork.renderNetwork ld.scalingFactor ld.coordScalingFactor ld.globalTransform network -- RenderNetwork.render 0.9 ld.state
+        let -- networkGrid = RenderNetwork.renderNetwork ld.scalingFactor ld.coordScalingFactor ld.globalTransform network
+            networkGrid = RenderNetwork.render ld.scalingFactor ld.coordScalingFactor ld.globalTransform ld.state
             indicators = G.flow G.right (List.map (renderIndicator metrics) ld.trackedMetrics)
         in 
           G.flow G.down [ indicators

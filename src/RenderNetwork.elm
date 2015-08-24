@@ -93,7 +93,7 @@ renderNetwork scale coordsScale globalTransform net =
     busStops = List.map (renderPoint coordsScale) points
     agents = List.map (renderAgent coordsScale) (agentPositions net)
         
-    mapGroup = GC.move globalTransform (GC.group <| roads ++ busStops ++ agents ++ pointLabels)
+    mapGroup = GC.move globalTransform (GC.group <| roads ++ busStops ++ agents {- ++ pointLabels-} )
   in
     GC.collage 1000 800 <| [GC.scale scale mapGroup]
 

@@ -4,6 +4,8 @@ import Debug
 
 import Graph exposing (NodeId)
 import IntDict
+import List as L
+import Array as A
 
 import Types exposing (Coords, Route)
 
@@ -40,3 +42,29 @@ carRouteFromList : List NodeId -> Route
 carRouteFromList x = case x of
   []    -> IntDict.empty
   n::ns -> IntDict.fromList <| List.map2 (,) (dropRight (n::ns)) (ns)
+
+
+
+moveIthMemberDown : Int -> List a -> List a
+moveIthMemberDown i ls =
+    let
+        ar = A.fromList ls
+        elem = A.get i ar
+        nextElem = A.get (i+1) ar
+        beginning = L.take i ls
+        end = L.drop (i+2) ls
+    in case (elem, nextElem) of 
+        (Just e1, Just e2) -> beginning ++ [e2] ++ [e1] ++ end
+        _ -> ls
+
+moveIthMemberUp : Int -> List a -> List a
+moveIthMemberUp i ls = 
+    let
+        ar = A.fromList ls
+        elem = A.get i ar
+        prevElem = A.get (i-1) ar
+        beginning = L.take (i-1) ls
+        end = L.drop (i+1) ls
+    in case (elem, prevElem) of 
+        (Just e1, Just e0) -> beginning ++ [e1] ++ [e0] ++ end
+        _ -> ls

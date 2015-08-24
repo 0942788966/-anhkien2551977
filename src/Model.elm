@@ -4,6 +4,7 @@ import Effects
 import Time exposing (Time)
 import Debug
 import Dict
+import DraggableForm
 
 import Types
 import Network
@@ -19,11 +20,21 @@ type Action = GoToScreen ScreenState
             | TickRealtime Time
             | ResetTime
             | ToggleAdvancingTime
-            | ChangeStopOrder
+            | ChangeStopOrder StopDirection
+
+type StopDirection = StopUp | StopDown | MakeActiveStopIndex Int
 
 type alias LevelData = {
-    stops: List BusStop
+    stops: List BusStop,
+    activeStopIdx: Maybe Int
 }
+
+defaultLevelData : LevelData
+defaultLevelData = { 
+    stops = [],
+    activeStopIdx = Nothing
+    }
+                
 
 type BusStop = BusStop String
 
@@ -42,7 +53,7 @@ type alias Model = {
 initialModel: Model
 initialModel = {
         screen = TitleScreen,
-        levelData = { stops = [] },
+        levelData = defaultLevelData,
         time = GameTime 0,
         timeAdvancing = False,
         network = Types.State Network.example Dict.empty,
@@ -54,6 +65,6 @@ initialModel = {
 
 levelDataForScreen : ScreenState -> LevelData
 levelDataForScreen screen = case screen of
-    LevelScreen n -> { stops = [BusStop "A", BusStop "B", BusStop "C", BusStop "D"] }
-    _ -> { stops = [] }
+    LevelScreen n -> { defaultLevelData | stops <- [BusStop "A", BusStop "B", BusStop "C", BusStop "D"] }
+    _ -> defaultLevelData
 

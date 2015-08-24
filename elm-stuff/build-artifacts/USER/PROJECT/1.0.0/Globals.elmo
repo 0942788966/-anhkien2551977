@@ -1,0 +1,23 @@
+Elm.Globals = Elm.Globals || {};
+Elm.Globals.make = function (_elm) {
+   "use strict";
+   _elm.Globals = _elm.Globals || {};
+   if (_elm.Globals.values)
+   return _elm.Globals.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Globals",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var padding = 0.18;
+   var size = 2.5;
+   _elm.Globals.values = {_op: _op
+                         ,size: size
+                         ,padding: padding};
+   return _elm.Globals.values;
+};

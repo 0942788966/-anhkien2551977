@@ -1,0 +1,103 @@
+Elm.Agent = Elm.Agent || {};
+Elm.Agent.make = function (_elm) {
+   "use strict";
+   _elm.Agent = _elm.Agent || {};
+   if (_elm.Agent.values)
+   return _elm.Agent.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Agent",
+   $Basics = Elm.Basics.make(_elm),
+   $Graph = Elm.Graph.make(_elm),
+   $Helpers = Elm.Helpers.make(_elm),
+   $IntDict = Elm.IntDict.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Types = Elm.Types.make(_elm);
+   var changeEdge = F2(function (agent,
+   nid) {
+      return function () {
+         var _v0 = agent.kind;
+         switch (_v0.ctor)
+         {case "Bus":
+            return $Helpers.getOrFail(A2($Basics._op["++"],
+              "Bus can\'t find where to go after node ",
+              A2($Basics._op["++"],
+              $Basics.toString(nid),
+              A2($Basics._op["++"],
+              " in ",
+              $Basics.toString($IntDict.toList(_v0._0))))))(A2($IntDict.get,
+              nid,
+              _v0._0));
+            case "Car":
+            return $Maybe.withDefault(10000)(A2($IntDict.get,
+              nid,
+              _v0._0));}
+         _U.badCase($moduleName,
+         "between lines 18 and 20");
+      }();
+   });
+   var translate = F2(function (agent,
+   maxTravelled) {
+      return function () {
+         var limit = maxTravelled;
+         var newPos = A2($Basics.min,
+         agent.travelled + agent.speed,
+         limit);
+         return _U.replace([["travelled"
+                            ,newPos]
+                           ,["totalDist"
+                            ,agent.totalDist + (newPos - agent.travelled)]],
+         agent);
+      }();
+   });
+   var move = F5(function (ctx,
+   from,
+   road,
+   agent,
+   maxTravelled) {
+      return function () {
+         var moved = A2(translate,
+         agent,
+         maxTravelled);
+         return _U.cmp(moved.travelled,
+         road.length) > 0 ? A2($Types.canMoveThrough,
+         agent,
+         ctx.node.label) ? function () {
+            var remainder = moved.travelled - road.length;
+            return {ctor: "_Tuple2"
+                   ,_0: {ctor: "_Tuple2"
+                        ,_0: ctx.node.id
+                        ,_1: A2(changeEdge,
+                        agent,
+                        ctx.node.id)}
+                   ,_1: _U.replace([["travelled"
+                                    ,remainder]
+                                   ,["lastEdge"
+                                    ,$Maybe.Just({ctor: "_Tuple2"
+                                                 ,_0: from
+                                                 ,_1: ctx.node.id})]],
+                   agent)};
+         }() : {ctor: "_Tuple2"
+               ,_0: {ctor: "_Tuple2"
+                    ,_0: from
+                    ,_1: ctx.node.id}
+               ,_1: _U.replace([["travelled"
+                                ,road.length]],
+               agent)} : {ctor: "_Tuple2"
+                         ,_0: {ctor: "_Tuple2"
+                              ,_0: from
+                              ,_1: ctx.node.id}
+                         ,_1: moved};
+      }();
+   });
+   _elm.Agent.values = {_op: _op
+                       ,translate: translate
+                       ,changeEdge: changeEdge
+                       ,move: move};
+   return _elm.Agent.values;
+};

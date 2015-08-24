@@ -1,0 +1,260 @@
+Elm.Graph = Elm.Graph || {};
+Elm.Graph.Tree = Elm.Graph.Tree || {};
+Elm.Graph.Tree.make = function (_elm) {
+   "use strict";
+   _elm.Graph = _elm.Graph || {};
+   _elm.Graph.Tree = _elm.Graph.Tree || {};
+   if (_elm.Graph.Tree.values)
+   return _elm.Graph.Tree.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Graph.Tree",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Queue = Elm.Queue.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var pushMany = F2(function (vals,
+   queue) {
+      return A3($List.foldl,
+      $Queue.push,
+      queue,
+      vals);
+   });
+   var listForTraversal = F2(function (traversal,
+   tree) {
+      return function () {
+         var acc = $Basics.identity;
+         var f = F3(function (label,
+         children,
+         rest) {
+            return function ($) {
+               return rest(F2(function (x,
+               y) {
+                  return A2($List._op["::"],
+                  x,
+                  y);
+               })(label)($));
+            };
+         });
+         return A4(traversal,
+         f,
+         acc,
+         tree,
+         _L.fromArray([]));
+      }();
+   });
+   var size = function (tree) {
+      return function () {
+         switch (tree.ctor)
+         {case "MkTree": return tree._0;}
+         _U.badCase($moduleName,
+         "between lines 155 and 156");
+      }();
+   };
+   var root = function (tree) {
+      return function () {
+         switch (tree.ctor)
+         {case "MkTree": return tree._1;}
+         _U.badCase($moduleName,
+         "between lines 144 and 145");
+      }();
+   };
+   var height = function (tree) {
+      return function () {
+         var go = F2(function (h,t) {
+            return function () {
+               var _v6 = root(t);
+               switch (_v6.ctor)
+               {case "Just":
+                  switch (_v6._0.ctor)
+                    {case "_Tuple2":
+                       return A2($List.foldl,
+                         function ($) {
+                            return $Basics.max(go(h + 1)($));
+                         },
+                         h + 1)(_v6._0._1);}
+                    break;
+                  case "Nothing": return h;}
+               _U.badCase($moduleName,
+               "between lines 168 and 174");
+            }();
+         });
+         return A2(go,0,tree);
+      }();
+   };
+   var levelOrder = F3(function (visit,
+   acc,
+   tree) {
+      return function () {
+         var go = F2(function (acc,
+         toVisit) {
+            return function () {
+               var _v10 = $Queue.pop(toVisit);
+               switch (_v10.ctor)
+               {case "Just":
+                  switch (_v10._0.ctor)
+                    {case "_Tuple2":
+                       return function () {
+                            var _v14 = root(_v10._0._0);
+                            switch (_v14.ctor)
+                            {case "Just":
+                               switch (_v14._0.ctor)
+                                 {case "_Tuple2": return A2(go,
+                                      A3(visit,
+                                      _v14._0._0,
+                                      _v14._0._1,
+                                      acc),
+                                      A2(pushMany,
+                                      _v14._0._1,
+                                      _v10._0._1));}
+                                 break;
+                               case "Nothing": return A2(go,
+                                 acc,
+                                 _v10._0._1);}
+                            _U.badCase($moduleName,
+                            "between lines 216 and 220");
+                         }();}
+                    break;
+                  case "Nothing": return acc;}
+               _U.badCase($moduleName,
+               "between lines 213 and 220");
+            }();
+         });
+         return A2(go,
+         acc,
+         $Queue.push(tree)($Queue.empty));
+      }();
+   });
+   var levelOrderList = listForTraversal(levelOrder);
+   var postOrder = F3(function (visit,
+   acc,
+   tree) {
+      return function () {
+         var folder = $Basics.flip(postOrder(visit));
+         return function () {
+            var _v18 = root(tree);
+            switch (_v18.ctor)
+            {case "Just":
+               switch (_v18._0.ctor)
+                 {case "_Tuple2":
+                    return A3(visit,
+                      _v18._0._0,
+                      _v18._0._1,
+                      A3($List.foldl,
+                      folder,
+                      acc,
+                      _v18._0._1));}
+                 break;
+               case "Nothing": return acc;}
+            _U.badCase($moduleName,
+            "between lines 253 and 256");
+         }();
+      }();
+   });
+   var postOrderList = listForTraversal(postOrder);
+   var preOrder = F3(function (visit,
+   acc,
+   tree) {
+      return function () {
+         var folder = $Basics.flip(preOrder(visit));
+         return function () {
+            var _v22 = root(tree);
+            switch (_v22.ctor)
+            {case "Just":
+               switch (_v22._0.ctor)
+                 {case "_Tuple2":
+                    return A3($List.foldl,
+                      folder,
+                      A3(visit,
+                      _v22._0._0,
+                      _v22._0._1,
+                      acc),
+                      _v22._0._1);}
+                 break;
+               case "Nothing": return acc;}
+            _U.badCase($moduleName,
+            "between lines 286 and 289");
+         }();
+      }();
+   });
+   var preOrderList = listForTraversal(preOrder);
+   var MkTree = F2(function (a,b) {
+      return {ctor: "MkTree"
+             ,_0: a
+             ,_1: b};
+   });
+   var empty = A2(MkTree,
+   0,
+   $Maybe.Nothing);
+   var isEmpty = function (tree) {
+      return _U.eq(tree,empty);
+   };
+   var inner = F2(function (label,
+   children) {
+      return function () {
+         var children$ = A2($List.filter,
+         function ($) {
+            return $Basics.not(isEmpty($));
+         },
+         children);
+         var size$ = A3($List.foldl,
+         function ($) {
+            return F2(function (x,y) {
+               return x + y;
+            })(size($));
+         },
+         1,
+         children$);
+         return A2(MkTree,
+         size$,
+         $Maybe.Just({ctor: "_Tuple2"
+                     ,_0: label
+                     ,_1: children$}));
+      }();
+   });
+   var leaf = function (val) {
+      return A2(inner,
+      val,
+      _L.fromArray([]));
+   };
+   var unfoldTree = F2(function (next,
+   seed) {
+      return function () {
+         var $ = next(seed),
+         label = $._0,
+         seeds = $._1;
+         return A2(inner,
+         label,
+         A2($List.map,
+         unfoldTree(next),
+         seeds));
+      }();
+   });
+   var unfoldForest = F2(function (next,
+   seeds) {
+      return A2($List.map,
+      unfoldTree(next),
+      seeds);
+   });
+   _elm.Graph.Tree.values = {_op: _op
+                            ,empty: empty
+                            ,leaf: leaf
+                            ,inner: inner
+                            ,unfoldTree: unfoldTree
+                            ,unfoldForest: unfoldForest
+                            ,isEmpty: isEmpty
+                            ,root: root
+                            ,size: size
+                            ,height: height
+                            ,levelOrder: levelOrder
+                            ,levelOrderList: levelOrderList
+                            ,preOrder: preOrder
+                            ,preOrderList: preOrderList
+                            ,postOrder: postOrder
+                            ,postOrderList: postOrderList};
+   return _elm.Graph.Tree.values;
+};

@@ -1,0 +1,187 @@
+Elm.Helpers = Elm.Helpers || {};
+Elm.Helpers.make = function (_elm) {
+   "use strict";
+   _elm.Helpers = _elm.Helpers || {};
+   if (_elm.Helpers.values)
+   return _elm.Helpers.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Helpers",
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Graph = Elm.Graph.make(_elm),
+   $Graph$Tree = Elm.Graph.Tree.make(_elm),
+   $IntDict = Elm.IntDict.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Types = Elm.Types.make(_elm);
+   var findPathInTree = F2(function (goalId,
+   tree) {
+      return function () {
+         var _v0 = $Graph$Tree.root(tree);
+         switch (_v0.ctor)
+         {case "Just":
+            switch (_v0._0.ctor)
+              {case "_Tuple2":
+                 return _U.eq(_v0._0._0.node.id,
+                   goalId) ? $Maybe.Just(_L.fromArray([goalId])) : function () {
+                      var paths = A2($List.filterMap,
+                      findPathInTree(goalId),
+                      _v0._0._1);
+                      return $Maybe.map(function (lst) {
+                         return A2($List._op["::"],
+                         _v0._0._0.node.id,
+                         lst);
+                      })($List.head(paths));
+                   }();}
+              break;
+            case "Nothing":
+            return $Maybe.Nothing;}
+         _U.badCase($moduleName,
+         "between lines 47 and 54");
+      }();
+   });
+   var addCoords = F2(function (_v4,
+   _v5) {
+      return function () {
+         switch (_v5.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (_v4.ctor)
+                 {case "_Tuple2":
+                    return {ctor: "_Tuple2"
+                           ,_0: _v4._0 + _v5._0
+                           ,_1: _v4._1 + _v5._1};}
+                 _U.badCase($moduleName,
+                 "on line 35, column 30 to 42");
+              }();}
+         _U.badCase($moduleName,
+         "on line 35, column 30 to 42");
+      }();
+   });
+   var interpolate = F3(function (p1,
+   p2,
+   fraction) {
+      return {_: {}
+             ,x: (1 - fraction) * p1.x + fraction * p2.x
+             ,y: (1 - fraction) * p1.y + fraction * p2.y};
+   });
+   var dist = F2(function (x,y) {
+      return $Basics.sqrt(Math.pow(x,
+      2) + Math.pow(y,2));
+   });
+   var watchIf = F3(function (str,
+   bool,
+   value) {
+      return bool ? A2($Debug.watch,
+      str,
+      value) : value;
+   });
+   var dropRight = function (lst) {
+      return $List.reverse($List.drop(1)($List.reverse(lst)));
+   };
+   var carRouteFromList = function (x) {
+      return function () {
+         switch (x.ctor)
+         {case "::":
+            return $IntDict.fromList(A3($List.map2,
+              F2(function (v0,v1) {
+                 return {ctor: "_Tuple2"
+                        ,_0: v0
+                        ,_1: v1};
+              }),
+              dropRight(A2($List._op["::"],
+              x._0,
+              x._1)),
+              x._1));
+            case "[]":
+            return $IntDict.empty;}
+         _U.badCase($moduleName,
+         "between lines 71 and 73");
+      }();
+   };
+   var getOrFail = F2(function (ex,
+   maybe) {
+      return function () {
+         switch (maybe.ctor)
+         {case "Just": return maybe._0;
+            case "Nothing":
+            return $Debug.crash(ex);}
+         _U.badCase($moduleName,
+         "between lines 13 and 15");
+      }();
+   });
+   var findPath = F2(function (net,
+   _v17) {
+      return function () {
+         switch (_v17.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var dfsTree = A2($Graph.dfsTree,
+                 _v17._0,
+                 net);
+                 return getOrFail("couldn\'t find path!")(A2(findPathInTree,
+                 _v17._1,
+                 dfsTree));
+              }();}
+         _U.badCase($moduleName,
+         "between lines 41 and 43");
+      }();
+   });
+   var busRouteFromList = F2(function (x,
+   net) {
+      return function () {
+         switch (x.ctor)
+         {case "::": return function () {
+                 var pairs = A3($List.map2,
+                 F2(function (v0,v1) {
+                    return {ctor: "_Tuple2"
+                           ,_0: v0
+                           ,_1: v1};
+                 }),
+                 A2($List._op["::"],x._0,x._1),
+                 A2($Basics._op["++"],
+                 x._1,
+                 _L.fromArray([x._0])));
+                 var subroutes = A2($List.map,
+                 findPath(net),
+                 pairs);
+                 var combinedList = A2($List.concatMap,
+                 $List.drop(1),
+                 subroutes);
+                 var first = getOrFail("")($List.head(combinedList));
+                 var rest = getOrFail("")($List.tail(combinedList));
+                 return $IntDict.fromList(A3($List.map2,
+                 F2(function (v0,v1) {
+                    return {ctor: "_Tuple2"
+                           ,_0: v0
+                           ,_1: v1};
+                 }),
+                 combinedList,
+                 A2($Basics._op["++"],
+                 rest,
+                 _L.fromArray([first]))));
+              }();
+            case "[]":
+            return $IntDict.empty;}
+         _U.badCase($moduleName,
+         "between lines 59 and 68");
+      }();
+   });
+   _elm.Helpers.values = {_op: _op
+                         ,getOrFail: getOrFail
+                         ,dropRight: dropRight
+                         ,watchIf: watchIf
+                         ,dist: dist
+                         ,interpolate: interpolate
+                         ,addCoords: addCoords
+                         ,findPath: findPath
+                         ,findPathInTree: findPathInTree
+                         ,busRouteFromList: busRouteFromList
+                         ,carRouteFromList: carRouteFromList};
+   return _elm.Helpers.values;
+};

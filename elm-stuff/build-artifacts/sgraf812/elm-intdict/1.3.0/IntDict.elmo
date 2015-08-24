@@ -1,0 +1,834 @@
+Elm.IntDict = Elm.IntDict || {};
+Elm.IntDict.make = function (_elm) {
+   "use strict";
+   _elm.IntDict = _elm.IntDict || {};
+   if (_elm.IntDict.values)
+   return _elm.IntDict.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "IntDict",
+   $Basics = Elm.Basics.make(_elm),
+   $Bitwise = Elm.Bitwise.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var combineBits = F3(function (a,
+   b,
+   mask) {
+      return A2($Bitwise.or,
+      A2($Bitwise.and,
+      a,
+      $Bitwise.complement(mask)),
+      A2($Bitwise.and,b,mask));
+   });
+   var Siblings = function (a) {
+      return {ctor: "Siblings"
+             ,_0: a};
+   };
+   var RightChild = function (a) {
+      return {ctor: "RightChild"
+             ,_0: a};
+   };
+   var LeftChild = function (a) {
+      return {ctor: "LeftChild"
+             ,_0: a};
+   };
+   var Same = {ctor: "Same"};
+   var foldr = F3(function (f,
+   acc,
+   dict) {
+      return function () {
+         switch (dict.ctor)
+         {case "Empty": return acc;
+            case "Inner": return A3(foldr,
+              f,
+              A3(foldr,f,acc,dict._0.right),
+              dict._0.left);
+            case "Leaf": return A3(f,
+              dict._0.key,
+              dict._0.value,
+              acc);}
+         _U.badCase($moduleName,
+         "between lines 342 and 347");
+      }();
+   });
+   var keys = function (dict) {
+      return A3(foldr,
+      F3(function (key,
+      value,
+      keyList) {
+         return A2($List._op["::"],
+         key,
+         keyList);
+      }),
+      _L.fromArray([]),
+      dict);
+   };
+   var values = function (dict) {
+      return A3(foldr,
+      F3(function (key,
+      value,
+      valueList) {
+         return A2($List._op["::"],
+         value,
+         valueList);
+      }),
+      _L.fromArray([]),
+      dict);
+   };
+   var toList = function (dict) {
+      return A3(foldr,
+      F3(function (key,value,list) {
+         return A2($List._op["::"],
+         {ctor: "_Tuple2"
+         ,_0: key
+         ,_1: value},
+         list);
+      }),
+      _L.fromArray([]),
+      dict);
+   };
+   var toString$ = function (dict) {
+      return A2($Basics._op["++"],
+      "IntDict.fromList ",
+      $Basics.toString(toList(dict)));
+   };
+   var foldl = F3(function (f,
+   acc,
+   dict) {
+      return function () {
+         switch (dict.ctor)
+         {case "Empty": return acc;
+            case "Inner": return A3(foldl,
+              f,
+              A3(foldl,f,acc,dict._0.left),
+              dict._0.right);
+            case "Leaf": return A3(f,
+              dict._0.key,
+              dict._0.value,
+              acc);}
+         _U.badCase($moduleName,
+         "between lines 331 and 336");
+      }();
+   });
+   var findMax = function (dict) {
+      return function () {
+         switch (dict.ctor)
+         {case "Empty":
+            return $Maybe.Nothing;
+            case "Inner":
+            return findMax(dict._0.right);
+            case "Leaf":
+            return $Maybe.Just({ctor: "_Tuple2"
+                               ,_0: dict._0.key
+                               ,_1: dict._0.value});}
+         _U.badCase($moduleName,
+         "between lines 299 and 302");
+      }();
+   };
+   var findMin = function (dict) {
+      return function () {
+         switch (dict.ctor)
+         {case "Empty":
+            return $Maybe.Nothing;
+            case "Inner":
+            return findMin(dict._0.left);
+            case "Leaf":
+            return $Maybe.Just({ctor: "_Tuple2"
+                               ,_0: dict._0.key
+                               ,_1: dict._0.value});}
+         _U.badCase($moduleName,
+         "between lines 290 and 293");
+      }();
+   };
+   var size = function (dict) {
+      return function () {
+         switch (dict.ctor)
+         {case "Empty": return 0;
+            case "Inner":
+            return dict._0.size;
+            case "Leaf": return 1;}
+         _U.badCase($moduleName,
+         "between lines 253 and 257");
+      }();
+   };
+   var isEmpty = function (dict) {
+      return function () {
+         switch (dict.ctor)
+         {case "Empty": return true;}
+         return false;
+      }();
+   };
+   var highestBitSet = function (n) {
+      return function () {
+         var shiftOr = F2(function (n$,
+         shift) {
+            return A2($Bitwise.or,
+            n$,
+            A2($Bitwise.shiftRightLogical,
+            n$,
+            shift));
+         });
+         var n1 = A2(shiftOr,n,1);
+         var n2 = A2(shiftOr,n1,2);
+         var n3 = A2(shiftOr,n2,4);
+         var n4 = A2(shiftOr,n3,8);
+         var n5 = A2(shiftOr,n4,16);
+         return A2($Bitwise.and,
+         n5,
+         $Bitwise.complement(A2($Bitwise.shiftRightLogical,
+         n5,
+         1)));
+      }();
+   };
+   var signBit = highestBitSet(-1);
+   var isBranchingBitSet = F2(function (p,
+   n) {
+      return function () {
+         var n$ = A2($Bitwise.xor,
+         n,
+         signBit);
+         return !_U.eq(A2($Bitwise.and,
+         n$,
+         p.branchingBit),
+         0);
+      }();
+   });
+   var higherBitMask = function (branchingBit) {
+      return $Bitwise.complement(branchingBit * 2 - 1);
+   };
+   var prefixMatches = F2(function (p,
+   n) {
+      return _U.eq(A2($Bitwise.and,
+      n,
+      higherBitMask(p.branchingBit)),
+      p.prefixBits);
+   });
+   var get = F2(function (key,
+   dict) {
+      return function () {
+         switch (dict.ctor)
+         {case "Empty":
+            return $Maybe.Nothing;
+            case "Inner":
+            return $Basics.not(A2(prefixMatches,
+              dict._0.prefix,
+              key)) ? $Maybe.Nothing : A2(isBranchingBitSet,
+              dict._0.prefix,
+              key) ? A2(get,
+              key,
+              dict._0.right) : A2(get,
+              key,
+              dict._0.left);
+            case "Leaf":
+            return _U.eq(dict._0.key,
+              key) ? $Maybe.Just(dict._0.value) : $Maybe.Nothing;}
+         _U.badCase($moduleName,
+         "between lines 272 and 284");
+      }();
+   });
+   var member = F2(function (key,
+   dict) {
+      return function () {
+         var _v19 = A2(get,key,dict);
+         switch (_v19.ctor)
+         {case "Just": return true;
+            case "Nothing": return false;}
+         _U.badCase($moduleName,
+         "between lines 262 and 264");
+      }();
+   });
+   var lcp = F2(function (x,y) {
+      return function () {
+         var diff = A2($Bitwise.xor,
+         x,
+         y);
+         var branchingBit = highestBitSet(diff);
+         var mask = higherBitMask(branchingBit);
+         var prefixBits = A2($Bitwise.and,
+         x,
+         mask);
+         return {_: {}
+                ,branchingBit: branchingBit
+                ,prefixBits: prefixBits};
+      }();
+   });
+   var determineInnerRelation = F2(function (l,
+   r) {
+      return function () {
+         var parentOf = F2(function (p,
+         c) {
+            return A2(isBranchingBitSet,
+            p.prefix,
+            c.prefix.prefixBits) ? RightChild({_: {}
+                                              ,p: p
+                                              ,r: c}) : LeftChild({_: {}
+                                                                  ,l: c
+                                                                  ,p: p});
+         });
+         var rp = r.prefix;
+         var lp = l.prefix;
+         var mask = highestBitSet(A2($Basics.max,
+         lp.branchingBit,
+         rp.branchingBit));
+         var modifiedRightPrefix = A3(combineBits,
+         rp.prefixBits,
+         $Bitwise.complement(lp.prefixBits),
+         mask);
+         var prefix = A2(lcp,
+         lp.prefixBits,
+         modifiedRightPrefix);
+         return _U.eq(l.prefix,
+         r.prefix) ? Same : _U.eq(prefix,
+         l.prefix) ? A2(parentOf,
+         l,
+         r) : _U.eq(prefix,
+         r.prefix) ? A2(parentOf,
+         r,
+         l) : A2(isBranchingBitSet,
+         prefix,
+         rp.prefixBits) ? Siblings({_: {}
+                                   ,l: l
+                                   ,parentPrefix: prefix
+                                   ,r: r}) : Siblings({_: {}
+                                                      ,l: r
+                                                      ,parentPrefix: prefix
+                                                      ,r: l});
+      }();
+   });
+   var isValidKey = function (k) {
+      return _U.eq(A2($Bitwise.or,
+      k,
+      0),
+      k);
+   };
+   var Inner = function (a) {
+      return {ctor: "Inner",_0: a};
+   };
+   var inner = F3(function (p,
+   l,
+   r) {
+      return function () {
+         var _v21 = {ctor: "_Tuple2"
+                    ,_0: l
+                    ,_1: r};
+         switch (_v21.ctor)
+         {case "_Tuple2":
+            switch (_v21._0.ctor)
+              {case "Empty": return r;}
+              switch (_v21._1.ctor)
+              {case "Empty": return l;}
+              return Inner({_: {}
+                           ,left: l
+                           ,prefix: p
+                           ,right: r
+                           ,size: size(l) + size(r)});}
+         _U.badCase($moduleName,
+         "between lines 100 and 108");
+      }();
+   });
+   var Leaf = function (a) {
+      return {ctor: "Leaf",_0: a};
+   };
+   var leaf = F2(function (k,v) {
+      return Leaf({_: {}
+                  ,key: k
+                  ,value: v});
+   });
+   var singleton = F2(function (key,
+   value) {
+      return A2(leaf,key,value);
+   });
+   var Empty = {ctor: "Empty"};
+   var empty = Empty;
+   var update = F3(function (key,
+   alter,
+   dict) {
+      return function () {
+         var join = F2(function (_v24,
+         _v25) {
+            return function () {
+               switch (_v25.ctor)
+               {case "_Tuple2":
+                  return function () {
+                       switch (_v24.ctor)
+                       {case "_Tuple2":
+                          return function () {
+                               var prefix = A2(lcp,
+                               _v24._0,
+                               _v25._0);
+                               return A2(isBranchingBitSet,
+                               prefix,
+                               _v25._0) ? A3(inner,
+                               prefix,
+                               _v24._1,
+                               _v25._1) : A3(inner,
+                               prefix,
+                               _v25._1,
+                               _v24._1);
+                            }();}
+                       _U.badCase($moduleName,
+                       "between lines 218 and 221");
+                    }();}
+               _U.badCase($moduleName,
+               "between lines 218 and 221");
+            }();
+         });
+         var alteredNode = function (v) {
+            return function () {
+               var _v32 = alter(v);
+               switch (_v32.ctor)
+               {case "Just": return A2(leaf,
+                    key,
+                    _v32._0);
+                  case "Nothing": return empty;}
+               _U.badCase($moduleName,
+               "between lines 213 and 217");
+            }();
+         };
+         return function () {
+            switch (dict.ctor)
+            {case "Empty":
+               return alteredNode($Maybe.Nothing);
+               case "Inner":
+               return A2(prefixMatches,
+                 dict._0.prefix,
+                 key) ? A2(isBranchingBitSet,
+                 dict._0.prefix,
+                 key) ? A3(inner,
+                 dict._0.prefix,
+                 dict._0.left,
+                 A3(update,
+                 key,
+                 alter,
+                 dict._0.right)) : A3(inner,
+                 dict._0.prefix,
+                 A3(update,
+                 key,
+                 alter,
+                 dict._0.left),
+                 dict._0.right) : A2(join,
+                 {ctor: "_Tuple2"
+                 ,_0: key
+                 ,_1: alteredNode($Maybe.Nothing)},
+                 {ctor: "_Tuple2"
+                 ,_0: dict._0.prefix.prefixBits
+                 ,_1: dict});
+               case "Leaf":
+               return _U.eq(dict._0.key,
+                 key) ? alteredNode($Maybe.Just(dict._0.value)) : A2(join,
+                 {ctor: "_Tuple2"
+                 ,_0: key
+                 ,_1: alteredNode($Maybe.Nothing)},
+                 {ctor: "_Tuple2"
+                 ,_0: dict._0.key
+                 ,_1: dict});}
+            _U.badCase($moduleName,
+            "between lines 223 and 236");
+         }();
+      }();
+   });
+   var insert = F3(function (key,
+   value,
+   dict) {
+      return A3(update,
+      key,
+      $Basics.always($Maybe.Just(value)),
+      dict);
+   });
+   var remove = F2(function (key,
+   dict) {
+      return A3(update,
+      key,
+      $Basics.always($Maybe.Nothing),
+      dict);
+   });
+   var uniteWith = F3(function (merger,
+   d1,
+   d2) {
+      return function () {
+         var mergeWith = F3(function (key,
+         left,
+         right) {
+            return function () {
+               var _v37 = {ctor: "_Tuple2"
+                          ,_0: left
+                          ,_1: right};
+               switch (_v37.ctor)
+               {case "_Tuple2":
+                  switch (_v37._0.ctor)
+                    {case "Just":
+                       switch (_v37._1.ctor)
+                         {case "Just":
+                            return $Maybe.Just(A3(merger,
+                              key,
+                              _v37._0._0,
+                              _v37._1._0));}
+                         return left;}
+                    switch (_v37._1.ctor)
+                    {case "Just": return right;}
+                    switch (_v37._0.ctor)
+                    {case "Nothing":
+                       switch (_v37._1.ctor)
+                         {case "Nothing":
+                            return $Debug.crash("IntDict.uniteWith: mergeWith was called with 2 Nothings. This is a bug in the implementation, please file a bug report!");}
+                         break;}
+                    break;}
+               _U.badCase($moduleName,
+               "between lines 406 and 412");
+            }();
+         });
+         return function () {
+            var _v43 = {ctor: "_Tuple2"
+                       ,_0: d1
+                       ,_1: d2};
+            switch (_v43.ctor)
+            {case "_Tuple2":
+               switch (_v43._0.ctor)
+                 {case "Empty": return _v43._1;}
+                 switch (_v43._1.ctor)
+                 {case "Empty": return _v43._0;}
+                 switch (_v43._0.ctor)
+                 {case "Leaf": return A3(update,
+                      _v43._0._0.key,
+                      function (r$) {
+                         return A3(mergeWith,
+                         _v43._0._0.key,
+                         $Maybe.Just(_v43._0._0.value),
+                         r$);
+                      },
+                      _v43._1);}
+                 switch (_v43._1.ctor)
+                 {case "Leaf": return A3(update,
+                      _v43._1._0.key,
+                      function (l$) {
+                         return A3(mergeWith,
+                         _v43._1._0.key,
+                         l$,
+                         $Maybe.Just(_v43._1._0.value));
+                      },
+                      _v43._0);}
+                 switch (_v43._0.ctor)
+                 {case "Inner":
+                    switch (_v43._1.ctor)
+                      {case "Inner":
+                         return function () {
+                              var _v50 = A2(determineInnerRelation,
+                              _v43._0._0,
+                              _v43._1._0);
+                              switch (_v50.ctor)
+                              {case "LeftChild":
+                                 return A3(inner,
+                                   _v50._0.p.prefix,
+                                   A3(uniteWith,
+                                   merger,
+                                   _v50._0.p.left,
+                                   Inner(_v50._0.l)),
+                                   _v50._0.p.right);
+                                 case "RightChild":
+                                 return A3(inner,
+                                   _v50._0.p.prefix,
+                                   _v50._0.p.left,
+                                   A3(uniteWith,
+                                   merger,
+                                   _v50._0.p.right,
+                                   Inner(_v50._0.r)));
+                                 case "Same": return A3(inner,
+                                   _v43._0._0.prefix,
+                                   A3(uniteWith,
+                                   merger,
+                                   _v43._0._0.left,
+                                   _v43._1._0.left),
+                                   A3(uniteWith,
+                                   merger,
+                                   _v43._0._0.right,
+                                   _v43._1._0.right));
+                                 case "Siblings":
+                                 return A3(inner,
+                                   _v50._0.parentPrefix,
+                                   Inner(_v50._0.l),
+                                   Inner(_v50._0.r));}
+                              _U.badCase($moduleName,
+                              "between lines 417 and 427");
+                           }();}
+                      break;}
+                 break;}
+            _U.badCase($moduleName,
+            "between lines 412 and 427");
+         }();
+      }();
+   });
+   var union = uniteWith(F3(function (key,
+   old,
+   $new) {
+      return old;
+   }));
+   var filter = F2(function (predicate,
+   dict) {
+      return function () {
+         var add = F3(function (k,
+         v,
+         d) {
+            return A2(predicate,
+            k,
+            v) ? A3(insert,k,v,d) : d;
+         });
+         return A3(foldl,add,empty,dict);
+      }();
+   });
+   var map = F2(function (f,dict) {
+      return function () {
+         switch (dict.ctor)
+         {case "Empty": return empty;
+            case "Inner": return A3(inner,
+              dict._0.prefix,
+              A2(map,f,dict._0.left),
+              A2(map,f,dict._0.right));
+            case "Leaf": return A2(leaf,
+              dict._0.key,
+              A2(f,
+              dict._0.key,
+              dict._0.value));}
+         _U.badCase($moduleName,
+         "between lines 322 and 325");
+      }();
+   });
+   var partition = F2(function (predicate,
+   dict) {
+      return function () {
+         var add = F3(function (key,
+         value,
+         _v57) {
+            return function () {
+               switch (_v57.ctor)
+               {case "_Tuple2":
+                  return A2(predicate,
+                    key,
+                    value) ? {ctor: "_Tuple2"
+                             ,_0: A3(insert,
+                             key,
+                             value,
+                             _v57._0)
+                             ,_1: _v57._1} : {ctor: "_Tuple2"
+                                             ,_0: _v57._0
+                                             ,_1: A3(insert,
+                                             key,
+                                             value,
+                                             _v57._1)};}
+               _U.badCase($moduleName,
+               "between lines 356 and 358");
+            }();
+         });
+         return A3(foldl,
+         add,
+         {ctor: "_Tuple2"
+         ,_0: empty
+         ,_1: empty},
+         dict);
+      }();
+   });
+   var fromList = function (pairs) {
+      return function () {
+         var insert$ = F2(function (_v61,
+         dict) {
+            return function () {
+               switch (_v61.ctor)
+               {case "_Tuple2":
+                  return A3(insert,
+                    _v61._0,
+                    _v61._1,
+                    dict);}
+               _U.badCase($moduleName,
+               "on line 507, column 31 to 46");
+            }();
+         });
+         return A3($List.foldl,
+         insert$,
+         empty,
+         pairs);
+      }();
+   };
+   var intersect = F2(function (d1,
+   d2) {
+      return function () {
+         var _v65 = {ctor: "_Tuple2"
+                    ,_0: d1
+                    ,_1: d2};
+         switch (_v65.ctor)
+         {case "_Tuple2":
+            switch (_v65._0.ctor)
+              {case "Empty": return Empty;}
+              switch (_v65._1.ctor)
+              {case "Empty": return Empty;}
+              switch (_v65._0.ctor)
+              {case "Leaf": return A2(member,
+                   _v65._0._0.key,
+                   _v65._1) ? d1 : Empty;}
+              switch (_v65._1.ctor)
+              {case "Leaf":
+                 return function () {
+                      var _v72 = A2(get,
+                      _v65._1._0.key,
+                      _v65._0);
+                      switch (_v72.ctor)
+                      {case "Just": return A2(leaf,
+                           _v65._1._0.key,
+                           _v72._0);
+                         case "Nothing": return Empty;}
+                      _U.badCase($moduleName,
+                      "between lines 443 and 446");
+                   }();}
+              switch (_v65._0.ctor)
+              {case "Inner":
+                 switch (_v65._1.ctor)
+                   {case "Inner":
+                      return function () {
+                           var _v74 = A2(determineInnerRelation,
+                           _v65._0._0,
+                           _v65._1._0);
+                           switch (_v74.ctor)
+                           {case "LeftChild":
+                              return _U.eq(_v74._0.p,
+                                _v65._0._0) ? A2(intersect,
+                                _v65._0._0.left,
+                                d2) : A2(intersect,
+                                d1,
+                                _v65._1._0.left);
+                              case "RightChild":
+                              return _U.eq(_v74._0.p,
+                                _v65._0._0) ? A2(intersect,
+                                _v65._0._0.right,
+                                d2) : A2(intersect,
+                                d1,
+                                _v65._1._0.right);
+                              case "Same": return A3(inner,
+                                _v65._0._0.prefix,
+                                A2(intersect,
+                                _v65._0._0.left,
+                                _v65._1._0.left),
+                                A2(intersect,
+                                _v65._0._0.right,
+                                _v65._1._0.right));
+                              case "Siblings": return Empty;}
+                           _U.badCase($moduleName,
+                           "between lines 446 and 457");
+                        }();}
+                   break;}
+              break;}
+         _U.badCase($moduleName,
+         "between lines 439 and 457");
+      }();
+   });
+   var diff = F2(function (d1,d2) {
+      return function () {
+         var _v78 = {ctor: "_Tuple2"
+                    ,_0: d1
+                    ,_1: d2};
+         switch (_v78.ctor)
+         {case "_Tuple2":
+            switch (_v78._0.ctor)
+              {case "Empty": return Empty;}
+              switch (_v78._1.ctor)
+              {case "Empty": return _v78._0;}
+              switch (_v78._0.ctor)
+              {case "Leaf": return A2(member,
+                   _v78._0._0.key,
+                   _v78._1) ? Empty : d1;}
+              switch (_v78._1.ctor)
+              {case "Leaf": return A2(remove,
+                   _v78._1._0.key,
+                   _v78._0);}
+              switch (_v78._0.ctor)
+              {case "Inner":
+                 switch (_v78._1.ctor)
+                   {case "Inner":
+                      return function () {
+                           var _v85 = A2(determineInnerRelation,
+                           _v78._0._0,
+                           _v78._1._0);
+                           switch (_v85.ctor)
+                           {case "LeftChild":
+                              return _U.eq(_v85._0.p,
+                                _v78._0._0) ? A3(inner,
+                                _v78._0._0.prefix,
+                                A2(diff,_v78._0._0.left,d2),
+                                _v78._0._0.right) : A2(diff,
+                                d1,
+                                _v78._1._0.left);
+                              case "RightChild":
+                              return _U.eq(_v85._0.p,
+                                _v78._0._0) ? A3(inner,
+                                _v78._0._0.prefix,
+                                _v78._0._0.left,
+                                A2(diff,
+                                _v78._0._0.right,
+                                d2)) : A2(diff,
+                                d1,
+                                _v78._1._0.right);
+                              case "Same": return A3(inner,
+                                _v78._0._0.prefix,
+                                A2(diff,
+                                _v78._0._0.left,
+                                _v78._1._0.left),
+                                A2(diff,
+                                _v78._0._0.right,
+                                _v78._1._0.right));
+                              case "Siblings": return d1;}
+                           _U.badCase($moduleName,
+                           "between lines 469 and 480");
+                        }();}
+                   break;}
+              break;}
+         _U.badCase($moduleName,
+         "between lines 464 and 480");
+      }();
+   });
+   var InnerType = F4(function (a,
+   b,
+   c,
+   d) {
+      return {_: {}
+             ,left: b
+             ,prefix: a
+             ,right: c
+             ,size: d};
+   });
+   var KeyPrefix = F2(function (a,
+   b) {
+      return {_: {}
+             ,branchingBit: b
+             ,prefixBits: a};
+   });
+   _elm.IntDict.values = {_op: _op
+                         ,isValidKey: isValidKey
+                         ,empty: empty
+                         ,singleton: singleton
+                         ,insert: insert
+                         ,update: update
+                         ,remove: remove
+                         ,isEmpty: isEmpty
+                         ,size: size
+                         ,member: member
+                         ,get: get
+                         ,findMin: findMin
+                         ,findMax: findMax
+                         ,filter: filter
+                         ,map: map
+                         ,foldl: foldl
+                         ,foldr: foldr
+                         ,partition: partition
+                         ,uniteWith: uniteWith
+                         ,union: union
+                         ,intersect: intersect
+                         ,diff: diff
+                         ,keys: keys
+                         ,values: values
+                         ,toList: toList
+                         ,fromList: fromList
+                         ,toString$: toString$};
+   return _elm.IntDict.values;
+};

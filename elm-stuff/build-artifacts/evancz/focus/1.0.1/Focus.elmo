@@ -1,0 +1,65 @@
+Elm.Focus = Elm.Focus || {};
+Elm.Focus.make = function (_elm) {
+   "use strict";
+   _elm.Focus = _elm.Focus || {};
+   if (_elm.Focus.values)
+   return _elm.Focus.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Focus",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   _op["=>"] = F2(function (largerFocus,
+   smallerFocus) {
+      return {_: {}
+             ,get: function (big) {
+                return smallerFocus.get(largerFocus.get(big));
+             }
+             ,update: F2(function (f,big) {
+                return A2(largerFocus.update,
+                smallerFocus.update(f),
+                big);
+             })};
+   });
+   var update = F3(function (focus,
+   f,
+   big) {
+      return A2(focus.update,
+      f,
+      big);
+   });
+   var set = F3(function (focus,
+   small,
+   big) {
+      return A2(focus.update,
+      $Basics.always(small),
+      big);
+   });
+   var get = F2(function (focus,
+   big) {
+      return focus.get(big);
+   });
+   var create = F2(function (get,
+   update) {
+      return {_: {}
+             ,get: get
+             ,update: update};
+   });
+   var Focus = F2(function (a,b) {
+      return {_: {}
+             ,get: a
+             ,update: b};
+   });
+   _elm.Focus.values = {_op: _op
+                       ,get: get
+                       ,set: set
+                       ,update: update
+                       ,create: create
+                       ,Focus: Focus};
+   return _elm.Focus.values;
+};

@@ -1,0 +1,15 @@
+{
+    "version": "1.0.0",
+    "summary": "Examples using the elm-draggable-form library.",
+    "repository": "https://github.com/robertjlooby/elm-draggable-form.git",
+    "license": "MIT",
+    "source-directories": [
+        "."
+    ],
+    "exposed-modules": [],
+    "dependencies": {
+        "elm-lang/core": "2.0.0 <= v < 3.0.0",
+        "robertjlooby/elm-draggable-form": "1.0.0 <= v < 1.0.0"
+    },
+    "elm-version": "0.15.0 <= v < 0.16.0"
+}

@@ -1,0 +1,232 @@
+Elm.DraggableForm = Elm.DraggableForm || {};
+Elm.DraggableForm.make = function (_elm) {
+   "use strict";
+   _elm.DraggableForm = _elm.DraggableForm || {};
+   if (_elm.DraggableForm.values)
+   return _elm.DraggableForm.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "DraggableForm",
+   $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var renderForm = function (draggableForm) {
+      return function () {
+         var $ = draggableForm.position,
+         x = $._0,
+         y = $._1;
+         var $ = {ctor: "_Tuple2"
+                 ,_0: $Basics.toFloat(x)
+                 ,_1: $Basics.toFloat(y)},
+         x$ = $._0,
+         y$ = $._1;
+         return A2($Graphics$Collage.move,
+         {ctor: "_Tuple2",_0: x$,_1: y$},
+         draggableForm.form);
+      }();
+   };
+   var render = function (model) {
+      return $List.reverse(A2($List.map,
+      renderForm,
+      model.forms));
+   };
+   var groupSort = F2(function (predicate,
+   list) {
+      return function (_v0) {
+         return function () {
+            switch (_v0.ctor)
+            {case "_Tuple2":
+               return A2($List.append,
+                 _v0._0,
+                 _v0._1);}
+            _U.badCase($moduleName,
+            "on line 173, column 20 to 35");
+         }();
+      }(A2($List.partition,
+      predicate,
+      list));
+   });
+   var moveForm = F2(function (position,
+   form) {
+      return _U.replace([["position"
+                         ,position]],
+      form);
+   });
+   var updateIf = F3(function (predicate,
+   update,
+   list) {
+      return A2($List.map,
+      function (i) {
+         return predicate(i) ? update(i) : i;
+      },
+      list);
+   });
+   var first = F2(function (predicate,
+   list) {
+      return $List.head(A2($List.filter,
+      predicate,
+      list));
+   });
+   var update = F2(function (action,
+   model) {
+      return function () {
+         switch (action.ctor)
+         {case "ChangeSelection":
+            return function () {
+                 var selectedForm = A2(first,
+                 function (f) {
+                    return A2(f.isPointInside,
+                    f.position,
+                    action._0);
+                 },
+                 model.forms);
+                 return function () {
+                    switch (selectedForm.ctor)
+                    {case "Just":
+                       return _U.replace([["forms"
+                                          ,A2(groupSort,
+                                          function (f) {
+                                             return _U.eq(f.id,
+                                             selectedForm._0.id);
+                                          },
+                                          model.forms)]
+                                         ,["selectedId"
+                                          ,$Maybe.Just(selectedForm._0.id)]],
+                         model);
+                       case "Nothing": return model;}
+                    _U.badCase($moduleName,
+                    "between lines 143 and 151");
+                 }();
+              }();
+            case "MoveSelected":
+            return function () {
+                 var _v9 = model.selectedId;
+                 switch (_v9.ctor)
+                 {case "Just":
+                    return _U.replace([["forms"
+                                       ,A3(updateIf,
+                                       function (f) {
+                                          return _U.eq(f.id,_v9._0);
+                                       },
+                                       moveForm(action._0),
+                                       model.forms)]],
+                      model);
+                    case "Nothing": return model;}
+                 _U.badCase($moduleName,
+                 "between lines 133 and 140");
+              }();
+            case "UnselectAll":
+            return _U.replace([["selectedId"
+                               ,$Maybe.Nothing]],
+              model);}
+         _U.badCase($moduleName,
+         "between lines 131 and 152");
+      }();
+   });
+   var UnselectAll = {ctor: "UnselectAll"};
+   var ChangeSelection = function (a) {
+      return {ctor: "ChangeSelection"
+             ,_0: a};
+   };
+   var MoveSelected = function (a) {
+      return {ctor: "MoveSelected"
+             ,_0: a};
+   };
+   var insideSquare = F3(function (sideLength,
+   center,
+   point) {
+      return function () {
+         var $ = point,
+         x$ = $._0,
+         y$ = $._1;
+         var $ = center,
+         x = $._0,
+         y = $._1;
+         return _U.cmp($Basics.toFloat($Basics.abs(x - x$)),
+         sideLength / 2) < 0 && _U.cmp($Basics.toFloat($Basics.abs(y - y$)),
+         sideLength / 2) < 0;
+      }();
+   });
+   var createSquare = F4(function (color,
+   sideLength,
+   initialPosition,
+   id) {
+      return {_: {}
+             ,form: A2($Graphics$Collage.filled,
+             color,
+             $Graphics$Collage.square(sideLength))
+             ,id: id
+             ,isPointInside: insideSquare(sideLength)
+             ,position: initialPosition};
+   });
+   var distance = F2(function (_v11,
+   _v12) {
+      return function () {
+         switch (_v12.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (_v11.ctor)
+                 {case "_Tuple2":
+                    return $Basics.sqrt($Basics.toFloat(Math.pow(_v11._0 - _v12._0,
+                      2) + Math.pow(_v11._1 - _v12._1,
+                      2)));}
+                 _U.badCase($moduleName,
+                 "between lines 77 and 79");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 77 and 79");
+      }();
+   });
+   var insideCircle = F3(function (radius,
+   center,
+   point) {
+      return _U.cmp(A2(distance,
+      center,
+      point),
+      radius) < 0;
+   });
+   var createCircle = F4(function (color,
+   radius,
+   initialPosition,
+   id) {
+      return {_: {}
+             ,form: A2($Graphics$Collage.filled,
+             color,
+             $Graphics$Collage.circle(radius))
+             ,id: id
+             ,isPointInside: insideCircle(radius)
+             ,position: initialPosition};
+   });
+   var DraggableForm = F4(function (a,
+   b,
+   c,
+   d) {
+      return {_: {}
+             ,form: a
+             ,id: b
+             ,isPointInside: c
+             ,position: d};
+   });
+   var Model = F2(function (a,b) {
+      return {_: {}
+             ,forms: a
+             ,selectedId: b};
+   });
+   _elm.DraggableForm.values = {_op: _op
+                               ,render: render
+                               ,update: update
+                               ,createCircle: createCircle
+                               ,createSquare: createSquare
+                               ,Model: Model
+                               ,DraggableForm: DraggableForm
+                               ,MoveSelected: MoveSelected
+                               ,ChangeSelection: ChangeSelection
+                               ,UnselectAll: UnselectAll};
+   return _elm.DraggableForm.values;
+};

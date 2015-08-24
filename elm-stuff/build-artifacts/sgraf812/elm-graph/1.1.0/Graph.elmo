@@ -1,0 +1,1170 @@
+Elm.Graph = Elm.Graph || {};
+Elm.Graph.make = function (_elm) {
+   "use strict";
+   _elm.Graph = _elm.Graph || {};
+   if (_elm.Graph.values)
+   return _elm.Graph.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Graph",
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Focus = Elm.Focus.make(_elm),
+   $Graph$Tree = Elm.Graph.Tree.make(_elm),
+   $IntDict = Elm.IntDict.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Queue = Elm.Queue.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var ignorePath = F4(function (visit,
+   path,
+   _v0,
+   acc) {
+      return function () {
+         return function () {
+            switch (path.ctor)
+            {case "::": return A2(visit,
+                 path._0,
+                 acc);
+               case "[]":
+               return $Debug.crash("Graph.ignorePath: No algorithm should ever pass an empty path into this BfsNodeVisitor.");}
+            _U.badCase($moduleName,
+            "between lines 990 and 994");
+         }();
+      }();
+   });
+   var onFinish = F3(function (visitor,
+   ctx,
+   acc) {
+      return {ctor: "_Tuple2"
+             ,_0: acc
+             ,_1: visitor(ctx)};
+   });
+   var onDiscovery = F3(function (visitor,
+   ctx,
+   acc) {
+      return {ctor: "_Tuple2"
+             ,_0: A2(visitor,ctx,acc)
+             ,_1: $Basics.identity};
+   });
+   var alongIncomingEdges = function (ctx) {
+      return $IntDict.keys(ctx.incoming);
+   };
+   var alongOutgoingEdges = function (ctx) {
+      return $IntDict.keys(ctx.outgoing);
+   };
+   var lookup = function (nodeId) {
+      return A2($Focus.create,
+      $IntDict.get(nodeId),
+      $IntDict.update(nodeId));
+   };
+   var outgoing = A2($Focus.create,
+   function (_) {
+      return _.outgoing;
+   },
+   F2(function (update,record) {
+      return _U.replace([["outgoing"
+                         ,update(record.outgoing)]],
+      record);
+   }));
+   var incoming = A2($Focus.create,
+   function (_) {
+      return _.incoming;
+   },
+   F2(function (update,record) {
+      return _U.replace([["incoming"
+                         ,update(record.incoming)]],
+      record);
+   }));
+   var node = A2($Focus.create,
+   function (_) {
+      return _.node;
+   },
+   F2(function (update,record) {
+      return _U.replace([["node"
+                         ,update(record.node)]],
+      record);
+   }));
+   var to = A2($Focus.create,
+   function (_) {
+      return _.to;
+   },
+   F2(function (update,record) {
+      return _U.replace([["to"
+                         ,update(record.to)]],
+      record);
+   }));
+   var from = A2($Focus.create,
+   function (_) {
+      return _.from;
+   },
+   F2(function (update,record) {
+      return _U.replace([["from"
+                         ,update(record.from)]],
+      record);
+   }));
+   var label = A2($Focus.create,
+   function (_) {
+      return _.label;
+   },
+   F2(function (update,record) {
+      return _U.replace([["label"
+                         ,update(record.label)]],
+      record);
+   }));
+   var id = A2($Focus.create,
+   function (_) {
+      return _.id;
+   },
+   F2(function (update,record) {
+      return _U.replace([["id"
+                         ,update(record.id)]],
+      record);
+   }));
+   var applyEdgeDiff = F3(function (nodeId,
+   diff,
+   graphRep) {
+      return function () {
+         var edgeUpdateToMaybe = function (edgeUpdate) {
+            return function () {
+               switch (edgeUpdate.ctor)
+               {case "Insert":
+                  return $Maybe.Just(edgeUpdate._0);
+                  case "Remove":
+                  return $Maybe.Nothing;}
+               _U.badCase($moduleName,
+               "between lines 240 and 244");
+            }();
+         };
+         var updateAdjacency = F3(function (edgeFocus,
+         updatedId,
+         edgeUpdate) {
+            return function () {
+               var updateLbl = A2($Focus.set,
+               edgeFocus,
+               edgeUpdateToMaybe(edgeUpdate));
+               return A2($IntDict.update,
+               updatedId,
+               $Maybe.map(updateLbl));
+            }();
+         });
+         var foldl$ = F3(function (f,
+         dict,
+         acc) {
+            return A3($IntDict.foldl,
+            f,
+            acc,
+            dict);
+         });
+         return A2(foldl$,
+         updateAdjacency(A2($Focus._op["=>"],
+         outgoing,
+         lookup(nodeId))),
+         diff.outgoing)(A2(foldl$,
+         updateAdjacency(A2($Focus._op["=>"],
+         incoming,
+         lookup(nodeId))),
+         diff.incoming)(graphRep));
+      }();
+   });
+   var emptyDiff = {_: {}
+                   ,incoming: $IntDict.empty
+                   ,outgoing: $IntDict.empty};
+   var EdgeDiff = F2(function (a,
+   b) {
+      return {_: {}
+             ,incoming: a
+             ,outgoing: b};
+   });
+   var Remove = function (a) {
+      return {ctor: "Remove"
+             ,_0: a};
+   };
+   var Insert = function (a) {
+      return {ctor: "Insert"
+             ,_0: a};
+   };
+   var computeEdgeDiff = F2(function (old,
+   $new) {
+      return function () {
+         var collectUpdates = F3(function (edgeUpdate,
+         updatedId,
+         label) {
+            return function () {
+               var replaceUpdate = function (old) {
+                  return function () {
+                     var _v8 = {ctor: "_Tuple2"
+                               ,_0: old
+                               ,_1: edgeUpdate(label)};
+                     switch (_v8.ctor)
+                     {case "_Tuple2":
+                        switch (_v8._0.ctor)
+                          {case "Just":
+                             switch (_v8._0._0.ctor)
+                               {case "Insert":
+                                  return $Debug.crash("Graph.computeEdgeDiff: Collected inserts before removals. This is an error in the implementation of Graph and you should file a bug report!");
+                                  case "Remove":
+                                  switch (_v8._1.ctor)
+                                    {case "Insert":
+                                       return $Maybe.Nothing;
+                                       case "Remove":
+                                       return $Debug.crash("Graph.computeEdgeDiff: Collected two removals for the same edge. This is an error in the implementation of Graph and you should file a bug report!");}
+                                    break;}
+                               break;
+                             case "Nothing":
+                             return $Maybe.Just(_v8._1);}
+                          break;}
+                     _U.badCase($moduleName,
+                     "between lines 196 and 207");
+                  }();
+               };
+               return A2($IntDict.update,
+               updatedId,
+               replaceUpdate);
+            }();
+         });
+         var collect = F3(function (edgeUpdate,
+         adj,
+         updates) {
+            return A3($IntDict.foldl,
+            collectUpdates(edgeUpdate),
+            updates,
+            adj);
+         });
+         return function () {
+            var _v16 = {ctor: "_Tuple2"
+                       ,_0: old
+                       ,_1: $new};
+            switch (_v16.ctor)
+            {case "_Tuple2":
+               switch (_v16._0.ctor)
+                 {case "Just":
+                    switch (_v16._1.ctor)
+                      {case "Just":
+                         return _U.eq(_v16._0._0,
+                           _v16._1._0) ? emptyDiff : {_: {}
+                                                     ,incoming: A2(collect,
+                                                     Insert,
+                                                     _v16._1._0.outgoing)(A2(collect,
+                                                     Remove,
+                                                     _v16._0._0.outgoing)($IntDict.empty))
+                                                     ,outgoing: A2(collect,
+                                                     Insert,
+                                                     _v16._1._0.incoming)(A2(collect,
+                                                     Remove,
+                                                     _v16._0._0.incoming)($IntDict.empty))};
+                         case "Nothing": return {_: {}
+                                                ,incoming: A2(collect,
+                                                Remove,
+                                                _v16._0._0.outgoing)($IntDict.empty)
+                                                ,outgoing: A2(collect,
+                                                Remove,
+                                                _v16._0._0.incoming)($IntDict.empty)};}
+                      break;
+                    case "Nothing":
+                    switch (_v16._1.ctor)
+                      {case "Just": return {_: {}
+                                           ,incoming: A2(collect,
+                                           Insert,
+                                           _v16._1._0.outgoing)($IntDict.empty)
+                                           ,outgoing: A2(collect,
+                                           Insert,
+                                           _v16._1._0.incoming)($IntDict.empty)};
+                         case "Nothing":
+                         return emptyDiff;}
+                      break;}
+                 break;}
+            _U.badCase($moduleName,
+            "between lines 213 and 230");
+         }();
+      }();
+   });
+   var unGraph = function (graph) {
+      return function () {
+         switch (graph.ctor)
+         {case "Graph": return graph._0;}
+         _U.badCase($moduleName,
+         "between lines 158 and 161");
+      }();
+   };
+   var edges = function (graph) {
+      return function () {
+         var foldl$ = F3(function (f,
+         dict,
+         list) {
+            return A3($IntDict.foldl,
+            f,
+            list,
+            dict);
+         });
+         var prependEdges = F2(function (node1,
+         ctx) {
+            return A2(foldl$,
+            F2(function (node2,e) {
+               return F2(function (x,y) {
+                  return A2($List._op["::"],
+                  x,
+                  y);
+               })({_: {}
+                  ,from: node1
+                  ,label: e
+                  ,to: node2});
+            }),
+            ctx.outgoing);
+         });
+         return A3(foldl$,
+         prependEdges,
+         unGraph(graph),
+         _L.fromArray([]));
+      }();
+   };
+   var Graph = function (a) {
+      return {ctor: "Graph",_0: a};
+   };
+   var empty = Graph($IntDict.empty);
+   var isEmpty = function (graph) {
+      return _U.eq(graph,empty);
+   };
+   var graphRep = A2($Focus.create,
+   unGraph,
+   function (update) {
+      return function ($) {
+         return Graph(update(unGraph($)));
+      };
+   });
+   var update = F2(function (nodeId,
+   updater) {
+      return function () {
+         var updater$ = function (rep) {
+            return function () {
+               var filterInvalidEdges = function (ctx) {
+                  return $IntDict.filter(F2(function (id,
+                  _v24) {
+                     return function () {
+                        return _U.eq(id,
+                        ctx.node.id) || A2($IntDict.member,
+                        id,
+                        rep);
+                     }();
+                  }));
+               };
+               var cleanUpEdges = function (ctx) {
+                  return A2($Focus.update,
+                  outgoing,
+                  filterInvalidEdges(ctx))(A2($Focus.update,
+                  incoming,
+                  filterInvalidEdges(ctx))(ctx));
+               };
+               var old = A2($IntDict.get,
+               nodeId,
+               rep);
+               var $new = $Maybe.map(cleanUpEdges)(updater(old));
+               var diff = A2(computeEdgeDiff,
+               old,
+               $new);
+               return A2($IntDict.update,
+               nodeId,
+               $Basics.always($new))(A2(applyEdgeDiff,
+               nodeId,
+               diff)(rep));
+            }();
+         };
+         return A2($Focus.update,
+         graphRep,
+         updater$);
+      }();
+   });
+   var insert = F2(function (nodeContext,
+   graph) {
+      return A3(update,
+      nodeContext.node.id,
+      $Basics.always($Maybe.Just(nodeContext)),
+      graph);
+   });
+   var remove = F2(function (nodeId,
+   graph) {
+      return A3(update,
+      nodeId,
+      $Basics.always($Maybe.Nothing),
+      graph);
+   });
+   var size = function ($) {
+      return $IntDict.size($Focus.get(graphRep)($));
+   };
+   var member = function (nodeId) {
+      return function ($) {
+         return $IntDict.member(nodeId)($Focus.get(graphRep)($));
+      };
+   };
+   var get = function (nodeId) {
+      return $Focus.get(A2($Focus._op["=>"],
+      graphRep,
+      lookup(nodeId)));
+   };
+   var inducedSubgraph = F2(function (nodeIds,
+   graph) {
+      return function () {
+         var insertContextById = F2(function (nodeId,
+         acc) {
+            return function () {
+               var _v26 = A2(get,
+               nodeId,
+               graph);
+               switch (_v26.ctor)
+               {case "Just": return A2(insert,
+                    _v26._0,
+                    acc);
+                  case "Nothing": return acc;}
+               _U.badCase($moduleName,
+               "between lines 349 and 354");
+            }();
+         });
+         return A3($List.foldl,
+         insertContextById,
+         empty,
+         nodeIds);
+      }();
+   });
+   var nodeById = function (nodeId) {
+      return A2($Focus.create,
+      get(nodeId),
+      update(nodeId));
+   };
+   var guidedDfs = F5(function (selectNeighbors,
+   visitNode,
+   seeds,
+   acc,
+   graph) {
+      return function () {
+         var go = F3(function (seeds,
+         acc,
+         graph) {
+            return function () {
+               switch (seeds.ctor)
+               {case "::": return function () {
+                       var _v31 = A2(get,
+                       seeds._0,
+                       graph);
+                       switch (_v31.ctor)
+                       {case "Just":
+                          return function () {
+                               var $ = A2(visitNode,
+                               _v31._0,
+                               acc),
+                               accAfterDiscovery = $._0,
+                               finishNode = $._1;
+                               var $ = A3(go,
+                               selectNeighbors(_v31._0),
+                               accAfterDiscovery,
+                               A2(remove,seeds._0,graph)),
+                               accBeforeFinish = $._0,
+                               graph$ = $._1;
+                               var accAfterFinish = finishNode(accBeforeFinish);
+                               return A3(go,
+                               seeds._1,
+                               accAfterFinish,
+                               graph$);
+                            }();
+                          case "Nothing": return A3(go,
+                            seeds._1,
+                            acc,
+                            graph);}
+                       _U.badCase($moduleName,
+                       "between lines 894 and 912");
+                    }();
+                  case "[]":
+                  return {ctor: "_Tuple2"
+                         ,_0: acc
+                         ,_1: graph};}
+               _U.badCase($moduleName,
+               "between lines 890 and 912");
+            }();
+         });
+         return A3(go,seeds,acc,graph);
+      }();
+   });
+   var dfsForest = F2(function (seeds,
+   graph) {
+      return function () {
+         var visitNode = F2(function (ctx,
+         trees) {
+            return {ctor: "_Tuple2"
+                   ,_0: _L.fromArray([])
+                   ,_1: function (children) {
+                      return A2($List._op["::"],
+                      A2($Graph$Tree.inner,
+                      ctx,
+                      children),
+                      trees);
+                   }};
+         });
+         return $List.reverse($Basics.fst(A5(guidedDfs,
+         alongOutgoingEdges,
+         visitNode,
+         seeds,
+         _L.fromArray([]),
+         graph)));
+      }();
+   });
+   var dfsTree = F2(function (seed,
+   graph) {
+      return function () {
+         var _v33 = A2(dfsForest,
+         _L.fromArray([seed]),
+         graph);
+         switch (_v33.ctor)
+         {case "::":
+            switch (_v33._1.ctor)
+              {case "[]": return _v33._0;}
+              break;
+            case "[]":
+            return $Graph$Tree.empty;}
+         return $Debug.crash("dfsTree: There can\'t be more than one DFS tree. This invariant is violated, please report this bug.");
+      }();
+   });
+   var guidedBfs = F5(function (selectNeighbors,
+   visitNode,
+   seeds,
+   acc,
+   graph) {
+      return function () {
+         var enqueueMany = F4(function (distance,
+         parentPath,
+         nodeIds,
+         queue) {
+            return A2($List.foldl,
+            $Queue.push,
+            queue)($List.map(function (id) {
+               return {ctor: "_Tuple3"
+                      ,_0: id
+                      ,_1: parentPath
+                      ,_2: distance};
+            })(nodeIds));
+         });
+         var go = F3(function (seeds,
+         acc,
+         graph) {
+            return function () {
+               var _v36 = $Queue.pop(seeds);
+               switch (_v36.ctor)
+               {case "Just":
+                  switch (_v36._0.ctor)
+                    {case "_Tuple2":
+                       switch (_v36._0._0.ctor)
+                         {case "_Tuple3":
+                            return function () {
+                                 var _v43 = A2(get,
+                                 _v36._0._0._0,
+                                 graph);
+                                 switch (_v43.ctor)
+                                 {case "Just":
+                                    return function () {
+                                         var path = A2($List._op["::"],
+                                         _v43._0,
+                                         _v36._0._0._1);
+                                         var acc$ = A3(visitNode,
+                                         path,
+                                         _v36._0._0._2,
+                                         acc);
+                                         var seeds$$ = A4(enqueueMany,
+                                         _v36._0._0._2 + 1,
+                                         path,
+                                         selectNeighbors(_v43._0),
+                                         _v36._0._1);
+                                         return A3(go,
+                                         seeds$$,
+                                         acc$,
+                                         A2(remove,_v36._0._0._0,graph));
+                                      }();
+                                    case "Nothing": return A3(go,
+                                      _v36._0._1,
+                                      acc,
+                                      graph);}
+                                 _U.badCase($moduleName,
+                                 "between lines 1030 and 1048");
+                              }();}
+                         break;}
+                    break;
+                  case "Nothing":
+                  return {ctor: "_Tuple2"
+                         ,_0: acc
+                         ,_1: graph};}
+               _U.badCase($moduleName,
+               "between lines 1026 and 1048");
+            }();
+         });
+         return A3(go,
+         A4(enqueueMany,
+         0,
+         _L.fromArray([]),
+         seeds,
+         $Queue.empty),
+         acc,
+         graph);
+      }();
+   });
+   var nodeIdRange = function (graph) {
+      return function () {
+         var rep = A2($Focus.get,
+         graphRep,
+         graph);
+         return A2($Maybe.andThen,
+         $IntDict.findMin(rep),
+         function (_v45) {
+            return function () {
+               switch (_v45.ctor)
+               {case "_Tuple2":
+                  return A2($Maybe.andThen,
+                    $IntDict.findMax(rep),
+                    function (_v49) {
+                       return function () {
+                          switch (_v49.ctor)
+                          {case "_Tuple2":
+                             return $Maybe.Just({ctor: "_Tuple2"
+                                                ,_0: _v45._0
+                                                ,_1: _v49._0});}
+                          _U.badCase($moduleName,
+                          "on line 426, column 5 to 19");
+                       }();
+                    });}
+               _U.badCase($moduleName,
+               "between lines 425 and 426");
+            }();
+         });
+      }();
+   };
+   var fold = F3(function (f,
+   acc,
+   graph) {
+      return function () {
+         var go = F2(function (acc,
+         graph$) {
+            return function () {
+               var maybeContext = A2($Basics.flip,
+               $Maybe.andThen,
+               function (id) {
+                  return A2(get,id,graph);
+               })($Maybe.map($Basics.fst)(nodeIdRange(graph$)));
+               return function () {
+                  switch (maybeContext.ctor)
+                  {case "Just": return A2(go,
+                       A2(f,maybeContext._0,acc),
+                       A2(remove,
+                       maybeContext._0.node.id,
+                       graph$));
+                     case "Nothing": return acc;}
+                  _U.badCase($moduleName,
+                  "between lines 665 and 670");
+               }();
+            }();
+         });
+         return A2(go,acc,graph);
+      }();
+   });
+   var mapContexts = function (f) {
+      return A2(fold,
+      function (ctx) {
+         return insert(f(ctx));
+      },
+      empty);
+   };
+   var mapNodes = function (f) {
+      return A2(fold,
+      function (ctx) {
+         return insert(_U.replace([["node"
+                                   ,{_: {}
+                                    ,id: ctx.node.id
+                                    ,label: f(ctx.node.label)}]],
+         ctx));
+      },
+      empty);
+   };
+   var mapEdges = function (f) {
+      return A2(fold,
+      function (ctx) {
+         return insert(_U.replace([["outgoing"
+                                   ,A2($IntDict.map,
+                                   F2(function (n,e) {
+                                      return f(e);
+                                   }),
+                                   ctx.outgoing)]
+                                  ,["incoming"
+                                   ,A2($IntDict.map,
+                                   F2(function (n,e) {
+                                      return f(e);
+                                   }),
+                                   ctx.incoming)]],
+         ctx));
+      },
+      empty);
+   };
+   var heightLevels = function (graph) {
+      return function () {
+         var subtract = F2(function (a,
+         b) {
+            return b - a;
+         });
+         var decrementAndNoteSources = F3(function (id,
+         _v55,
+         _v56) {
+            return function () {
+               switch (_v56.ctor)
+               {case "_Tuple2":
+                  return function () {
+                       return function () {
+                          var indegrees$ = A3($IntDict.update,
+                          id,
+                          $Maybe.map(subtract(1)),
+                          _v56._1);
+                          return function () {
+                             var _v61 = A2($IntDict.get,
+                             id,
+                             indegrees$);
+                             switch (_v61.ctor)
+                             {case "Just": switch (_v61._0)
+                                  {case 0: return function () {
+                                          var _v63 = A2(get,id,graph);
+                                          switch (_v63.ctor)
+                                          {case "Just":
+                                             return {ctor: "_Tuple2"
+                                                    ,_0: A2($List._op["::"],
+                                                    _v63._0,
+                                                    _v56._0)
+                                                    ,_1: indegrees$};
+                                             case "Nothing":
+                                             return $Debug.crash("Graph.heightLevels: Could not get a node of a graph which should be there by invariants. Please file a bug report!");}
+                                          _U.badCase($moduleName,
+                                          "between lines 1115 and 1118");
+                                       }();}
+                                  break;}
+                             return {ctor: "_Tuple2"
+                                    ,_0: _v56._0
+                                    ,_1: indegrees$};
+                          }();
+                       }();
+                    }();}
+               _U.badCase($moduleName,
+               "between lines 1110 and 1121");
+            }();
+         });
+         var decrementIndegrees = F3(function (source,
+         nextLevel,
+         indegrees) {
+            return A3($IntDict.foldl,
+            decrementAndNoteSources,
+            {ctor: "_Tuple2"
+            ,_0: nextLevel
+            ,_1: indegrees},
+            source.outgoing);
+         });
+         var go = F4(function (currentLevel,
+         nextLevel,
+         indegrees,
+         graph) {
+            return function () {
+               var _v65 = {ctor: "_Tuple2"
+                          ,_0: currentLevel
+                          ,_1: nextLevel};
+               switch (_v65.ctor)
+               {case "_Tuple2":
+                  switch (_v65._0.ctor)
+                    {case "::": return function () {
+                            var $ = A3(decrementIndegrees,
+                            _v65._0._0,
+                            nextLevel,
+                            indegrees),
+                            nextLevel$ = $._0,
+                            indegrees$ = $._1;
+                            return function () {
+                               var _v70 = A4(go,
+                               _v65._0._1,
+                               nextLevel$,
+                               indegrees$,
+                               A2(remove,
+                               _v65._0._0.node.id,
+                               graph));
+                               switch (_v70.ctor)
+                               {case "::":
+                                  return A2($List._op["::"],
+                                    A2($List._op["::"],
+                                    _v65._0._0,
+                                    _v70._0),
+                                    _v70._1);
+                                  case "[]":
+                                  return $Debug.crash("Graph.heightLevels: Reached a branch which is impossible by invariants. Please file a bug report!");}
+                               _U.badCase($moduleName,
+                               "between lines 1134 and 1139");
+                            }();
+                         }();
+                       case "[]": switch (_v65._1.ctor)
+                         {case "[]":
+                            return _L.fromArray([_L.fromArray([])]);}
+                         return A2($List._op["::"],
+                         _L.fromArray([]),
+                         A4(go,
+                         nextLevel,
+                         _L.fromArray([]),
+                         indegrees,
+                         graph));}
+                    break;}
+               _U.badCase($moduleName,
+               "between lines 1125 and 1139");
+            }();
+         });
+         var countIndegrees = A2(fold,
+         function (ctx) {
+            return A2($IntDict.insert,
+            ctx.node.id,
+            $IntDict.size(ctx.incoming));
+         },
+         $IntDict.empty);
+         var sources = A3(fold,
+         F2(function (ctx,acc) {
+            return $IntDict.isEmpty(ctx.incoming) ? A2($List._op["::"],
+            ctx,
+            acc) : acc;
+         }),
+         _L.fromArray([]),
+         graph);
+         return A4(go,
+         sources,
+         _L.fromArray([]),
+         countIndegrees(graph),
+         graph);
+      }();
+   };
+   var nodes = function ($) {
+      return $List.map(function (_) {
+         return _.node;
+      })($IntDict.values($Focus.get(graphRep)($)));
+   };
+   var toString$ = function (graph) {
+      return function () {
+         var edgeList = edges(graph);
+         var nodeList = nodes(graph);
+         return A2($Basics._op["++"],
+         "Graph.fromNodesAndEdges ",
+         A2($Basics._op["++"],
+         $Basics.toString(nodeList),
+         A2($Basics._op["++"],
+         " ",
+         $Basics.toString(edgeList))));
+      }();
+   };
+   var nodeIds = function ($) {
+      return $IntDict.keys($Focus.get(graphRep)($));
+   };
+   var dfs = F3(function (visitNode,
+   acc,
+   graph) {
+      return $Basics.fst(A5(guidedDfs,
+      alongOutgoingEdges,
+      visitNode,
+      nodeIds(graph),
+      acc,
+      graph));
+   });
+   var bfs = F3(function (visitNode,
+   acc,
+   graph) {
+      return function () {
+         var $ = A5(guidedBfs,
+         alongOutgoingEdges,
+         visitNode,
+         nodeIds(graph),
+         acc,
+         graph),
+         acc$ = $._0,
+         restGraph$ = $._1;
+         return function () {
+            var _v73 = nodeIdRange(graph);
+            switch (_v73.ctor)
+            {case "Just":
+               switch (_v73._0.ctor)
+                 {case "_Tuple2":
+                    return function () {
+                         var $ = A5(guidedBfs,
+                         alongOutgoingEdges,
+                         visitNode,
+                         _L.fromArray([_v73._0._0]),
+                         acc,
+                         graph),
+                         acc$ = $._0,
+                         restGraph$ = $._1;
+                         return A3(bfs,
+                         visitNode,
+                         acc$,
+                         restGraph$);
+                      }();}
+                 break;
+               case "Nothing": return acc;}
+            _U.badCase($moduleName,
+            "between lines 1063 and 1071");
+         }();
+      }();
+   });
+   var topologicalSort = function (graph) {
+      return $List.concatMap($Graph$Tree.preOrderList)($List.reverse(dfsForest(nodeIds(graph))(graph)));
+   };
+   var anyNode = function () {
+      var getMinId = function ($) {
+         return $Maybe.map($Basics.fst)($IntDict.findMin($Focus.get(graphRep)($)));
+      };
+      var get = function (graph) {
+         return A2($Maybe.andThen,
+         getMinId(graph),
+         function (id) {
+            return A2($Focus.get,
+            nodeById(id),
+            graph);
+         });
+      };
+      var update = F2(function (upd,
+      graph) {
+         return function () {
+            var nodeId = A2($Maybe.withDefault,
+            0,
+            getMinId(graph));
+            return A3($Focus.update,
+            nodeById(nodeId),
+            upd,
+            graph);
+         }();
+      });
+      return A2($Focus.create,
+      get,
+      update);
+   }();
+   var symmetricClosure = function (edgeMerger) {
+      return function () {
+         var orderedEdgeMerger = F4(function (from,
+         to,
+         outgoing,
+         incoming) {
+            return _U.cmp(from,
+            to) < 1 ? A4(edgeMerger,
+            from,
+            to,
+            outgoing,
+            incoming) : A4(edgeMerger,
+            to,
+            from,
+            incoming,
+            outgoing);
+         });
+         var updateContext = F2(function (nodeId,
+         ctx) {
+            return function () {
+               var edges = A3($IntDict.uniteWith,
+               orderedEdgeMerger(nodeId),
+               ctx.outgoing,
+               ctx.incoming);
+               return _U.replace([["outgoing"
+                                  ,edges]
+                                 ,["incoming",edges]],
+               ctx);
+            }();
+         });
+         return A2($Focus.update,
+         graphRep,
+         $IntDict.map(updateContext));
+      }();
+   };
+   var reverseEdges = function () {
+      var updateContext = F2(function (nodeId,
+      ctx) {
+         return _U.replace([["outgoing"
+                            ,ctx.incoming]
+                           ,["incoming",ctx.outgoing]],
+         ctx);
+      });
+      return A2($Focus.update,
+      graphRep,
+      $IntDict.map(updateContext));
+   }();
+   var stronglyConnectedComponents = function (graph) {
+      return function () {
+         var timestamps = A3(dfs,
+         onFinish(function ($) {
+            return F2(function (x,y) {
+               return A2($List._op["::"],
+               x,
+               y);
+            })(function (_) {
+               return _.id;
+            }(function (_) {
+               return _.node;
+            }($)));
+         }),
+         _L.fromArray([]),
+         graph);
+         var forest = A2(dfsForest,
+         timestamps,
+         reverseEdges(graph));
+         var components = A2($List.map,
+         function ($) {
+            return reverseEdges(A2($List.foldr,
+            insert,
+            empty)($Graph$Tree.preOrderList($)));
+         },
+         forest);
+         return components;
+      }();
+   };
+   var NodeContext = F3(function (a,
+   b,
+   c) {
+      return {_: {}
+             ,incoming: b
+             ,node: a
+             ,outgoing: c};
+   });
+   var fromNodesAndEdges = F2(function (nodes,
+   edges) {
+      return function () {
+         var addEdge = F2(function (edge,
+         rep) {
+            return function () {
+               var updateIncoming = function (ctx) {
+                  return _U.replace([["incoming"
+                                     ,A3($IntDict.insert,
+                                     edge.from,
+                                     edge.label,
+                                     ctx.incoming)]],
+                  ctx);
+               };
+               var updateOutgoing = function (ctx) {
+                  return _U.replace([["outgoing"
+                                     ,A3($IntDict.insert,
+                                     edge.to,
+                                     edge.label,
+                                     ctx.outgoing)]],
+                  ctx);
+               };
+               return A2($IntDict.update,
+               edge.to,
+               $Maybe.map(updateIncoming))(A2($IntDict.update,
+               edge.from,
+               $Maybe.map(updateOutgoing))(rep));
+            }();
+         });
+         var nodeRep = A3($List.foldl,
+         function (n) {
+            return A2($IntDict.insert,
+            n.id,
+            A3(NodeContext,
+            n,
+            $IntDict.empty,
+            $IntDict.empty));
+         },
+         $IntDict.empty,
+         nodes);
+         return Graph(A3($List.foldl,
+         addEdge,
+         nodeRep,
+         edges));
+      }();
+   });
+   var Edge = F3(function (a,b,c) {
+      return {_: {}
+             ,from: a
+             ,label: c
+             ,to: b};
+   });
+   var Node = F2(function (a,b) {
+      return {_: {}
+             ,id: a
+             ,label: b};
+   });
+   var fromNodeLabelsAndEdgePairs = F2(function (labels,
+   edges) {
+      return function () {
+         var edges$ = A2($List.map,
+         function (_v77) {
+            return function () {
+               switch (_v77.ctor)
+               {case "_Tuple2": return A3(Edge,
+                    _v77._0,
+                    _v77._1,
+                    {ctor: "_Tuple0"});}
+               _U.badCase($moduleName,
+               "on line 529, column 32 to 46");
+            }();
+         },
+         edges);
+         var nodes = $Basics.snd(A2($List.foldl,
+         F2(function (lbl,_v81) {
+            return function () {
+               switch (_v81.ctor)
+               {case "_Tuple2":
+                  return {ctor: "_Tuple2"
+                         ,_0: _v81._0 + 1
+                         ,_1: A2($List._op["::"],
+                         A2(Node,_v81._0,lbl),
+                         _v81._1)};}
+               _U.badCase($moduleName,
+               "on line 524, column 35 to 63");
+            }();
+         }),
+         {ctor: "_Tuple2"
+         ,_0: 0
+         ,_1: _L.fromArray([])})(labels));
+         return A2(fromNodesAndEdges,
+         nodes,
+         edges$);
+      }();
+   });
+   _elm.Graph.values = {_op: _op
+                       ,empty: empty
+                       ,update: update
+                       ,insert: insert
+                       ,remove: remove
+                       ,inducedSubgraph: inducedSubgraph
+                       ,isEmpty: isEmpty
+                       ,size: size
+                       ,member: member
+                       ,get: get
+                       ,nodeIdRange: nodeIdRange
+                       ,nodeIds: nodeIds
+                       ,nodes: nodes
+                       ,edges: edges
+                       ,fromNodesAndEdges: fromNodesAndEdges
+                       ,fromNodeLabelsAndEdgePairs: fromNodeLabelsAndEdgePairs
+                       ,id: id
+                       ,label: label
+                       ,from: from
+                       ,to: to
+                       ,node: node
+                       ,incoming: incoming
+                       ,outgoing: outgoing
+                       ,nodeById: nodeById
+                       ,anyNode: anyNode
+                       ,fold: fold
+                       ,mapContexts: mapContexts
+                       ,mapNodes: mapNodes
+                       ,mapEdges: mapEdges
+                       ,symmetricClosure: symmetricClosure
+                       ,reverseEdges: reverseEdges
+                       ,alongOutgoingEdges: alongOutgoingEdges
+                       ,alongIncomingEdges: alongIncomingEdges
+                       ,onDiscovery: onDiscovery
+                       ,onFinish: onFinish
+                       ,dfs: dfs
+                       ,dfsTree: dfsTree
+                       ,dfsForest: dfsForest
+                       ,guidedDfs: guidedDfs
+                       ,ignorePath: ignorePath
+                       ,bfs: bfs
+                       ,guidedBfs: guidedBfs
+                       ,heightLevels: heightLevels
+                       ,topologicalSort: topologicalSort
+                       ,stronglyConnectedComponents: stronglyConnectedComponents
+                       ,toString$: toString$
+                       ,Node: Node
+                       ,Edge: Edge
+                       ,NodeContext: NodeContext};
+   return _elm.Graph.values;
+};

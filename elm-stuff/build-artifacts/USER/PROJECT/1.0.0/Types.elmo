@@ -1,0 +1,152 @@
+Elm.Types = Elm.Types || {};
+Elm.Types.make = function (_elm) {
+   "use strict";
+   _elm.Types = _elm.Types || {};
+   if (_elm.Types.values)
+   return _elm.Types.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Types",
+   $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
+   $Graph = Elm.Graph.make(_elm),
+   $IntDict = Elm.IntDict.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var canMoveThrough = F2(function (agent,
+   point) {
+      return function () {
+         var _v0 = {ctor: "_Tuple2"
+                   ,_0: point.kind
+                   ,_1: agent.kind};
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            switch (_v0._0.ctor)
+              {case "BusStop":
+                 switch (_v0._1.ctor)
+                   {case "Bus":
+                      return _U.cmp(_v0._0._0.currentlyWaiting,
+                        1.0) < 1;}
+                   break;
+                 case "StopSign":
+                 return _U.cmp(_v0._0._0.currentDelay,
+                   1.0) < 1;}
+              break;}
+         return true;
+      }();
+   });
+   var waitingPassengersAt = function (point) {
+      return function () {
+         var _v6 = point.kind;
+         switch (_v6.ctor)
+         {case "BusStop":
+            return $Basics.round(_v6._0.currentlyWaiting);}
+         return 0;
+      }();
+   };
+   var busDistanceTravelled = function (agent) {
+      return function () {
+         var _v8 = agent.kind;
+         switch (_v8.ctor)
+         {case "Bus":
+            return agent.totalDist;
+            case "Car": return 0;}
+         _U.badCase($moduleName,
+         "between lines 60 and 62");
+      }();
+   };
+   var sizeOf = function (agent) {
+      return function () {
+         var _v11 = agent.kind;
+         switch (_v11.ctor)
+         {case "Bus": return 0.2;
+            case "Car": return 0.16;}
+         _U.badCase($moduleName,
+         "between lines 54 and 56");
+      }();
+   };
+   var isBus = function (agent) {
+      return function () {
+         var _v14 = agent.kind;
+         switch (_v14.ctor)
+         {case "Bus": return true;
+            case "Car": return false;}
+         _U.badCase($moduleName,
+         "between lines 48 and 50");
+      }();
+   };
+   var Car = function (a) {
+      return {ctor: "Car",_0: a};
+   };
+   var Bus = function (a) {
+      return {ctor: "Bus",_0: a};
+   };
+   var Agent = F6(function (a,
+   b,
+   c,
+   d,
+   e,
+   f) {
+      return {_: {}
+             ,color: e
+             ,kind: a
+             ,lastEdge: f
+             ,speed: b
+             ,totalDist: d
+             ,travelled: c};
+   });
+   var Road = F2(function (a,b) {
+      return {_: {}
+             ,agents: b
+             ,length: a};
+   });
+   var CarSpawner = function (a) {
+      return {ctor: "CarSpawner"
+             ,_0: a};
+   };
+   var StopSign = function (a) {
+      return {ctor: "StopSign"
+             ,_0: a};
+   };
+   var BusStop = function (a) {
+      return {ctor: "BusStop"
+             ,_0: a};
+   };
+   var Intersection = {ctor: "Intersection"};
+   var Point = F2(function (a,b) {
+      return {_: {}
+             ,coords: a
+             ,kind: b};
+   });
+   var State = F2(function (a,b) {
+      return {ctor: "State"
+             ,_0: a
+             ,_1: b};
+   });
+   var Coords = F2(function (a,b) {
+      return {_: {},x: a,y: b};
+   });
+   _elm.Types.values = {_op: _op
+                       ,Coords: Coords
+                       ,State: State
+                       ,Point: Point
+                       ,Intersection: Intersection
+                       ,BusStop: BusStop
+                       ,StopSign: StopSign
+                       ,CarSpawner: CarSpawner
+                       ,Road: Road
+                       ,Agent: Agent
+                       ,Bus: Bus
+                       ,Car: Car
+                       ,isBus: isBus
+                       ,sizeOf: sizeOf
+                       ,busDistanceTravelled: busDistanceTravelled
+                       ,waitingPassengersAt: waitingPassengersAt
+                       ,canMoveThrough: canMoveThrough};
+   return _elm.Types.values;
+};

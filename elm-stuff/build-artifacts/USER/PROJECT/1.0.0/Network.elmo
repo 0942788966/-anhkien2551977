@@ -1,0 +1,621 @@
+Elm.Network = Elm.Network || {};
+Elm.Network.make = function (_elm) {
+   "use strict";
+   _elm.Network = _elm.Network || {};
+   if (_elm.Network.values)
+   return _elm.Network.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Network",
+   $Agent = Elm.Agent.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
+   $Graph = Elm.Graph.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Helpers = Elm.Helpers.make(_elm),
+   $IntDict = Elm.IntDict.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $RenderNetwork = Elm.RenderNetwork.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Time = Elm.Time.make(_elm),
+   $Types = Elm.Types.make(_elm);
+   var moveAgents = function (ctx) {
+      return function () {
+         var moveRoad = function (_v0) {
+            return function () {
+               switch (_v0.ctor)
+               {case "_Tuple2":
+                  return function () {
+                       var go = F2(function (agent,
+                       calculated) {
+                          return function () {
+                             var onEdge = $List.map($Basics.snd)(A2($List.filter,
+                             function (_v4) {
+                                return function () {
+                                   switch (_v4.ctor)
+                                   {case "_Tuple2":
+                                      switch (_v4._0.ctor)
+                                        {case "_Tuple2":
+                                           return _U.eq(_v4._0._0,_v0._0);}
+                                        break;}
+                                   _U.badCase($moduleName,
+                                   "on line 76, column 50 to 59");
+                                }();
+                             },
+                             calculated));
+                             var max = function () {
+                                var _v10 = $List.head(onEdge);
+                                switch (_v10.ctor)
+                                {case "Just":
+                                   return _v10._0.travelled - $Types.sizeOf(_v10._0);
+                                   case "Nothing": return 1 / 0;}
+                                _U.badCase($moduleName,
+                                "between lines 77 and 80");
+                             }();
+                             return A2($List._op["::"],
+                             A5($Agent.move,
+                             ctx,
+                             _v0._0,
+                             _v0._1,
+                             agent,
+                             max),
+                             calculated);
+                          }();
+                       });
+                       return A2($List.foldl,
+                       go,
+                       _L.fromArray([]))($List.reverse(A2($List.sortBy,
+                       function (_) {
+                          return _.travelled;
+                       },
+                       _v0._1.agents)));
+                    }();}
+               _U.badCase($moduleName,
+               "between lines 75 and 83");
+            }();
+         };
+         return $List.concatMap(moveRoad)($IntDict.toList(ctx.incoming));
+      }();
+   };
+   var updateContext = function (ctx) {
+      return function () {
+         var moved = moveAgents(ctx);
+         var updateEdge = F2(function (edgeIds,
+         road) {
+            return function () {
+               var spawnedAgents = function () {
+                  var _v12 = ctx.node.label.kind;
+                  switch (_v12.ctor)
+                  {case "CarSpawner":
+                     return _U.cmp(_v12._0.nextIn,
+                       1) < 0 && _U.eq(_v12._0.startEdge,
+                       edgeIds) ? _L.fromArray([{_: {}
+                                                ,color: $Color.gray
+                                                ,kind: $Types.Car(_v12._0.route)
+                                                ,lastEdge: $Maybe.Nothing
+                                                ,speed: 5.0e-2
+                                                ,totalDist: 0.0
+                                                ,travelled: 0.0}]) : _L.fromArray([]);}
+                  return _L.fromArray([]);
+               }();
+               var check = function (_v14) {
+                  return function () {
+                     switch (_v14.ctor)
+                     {case "_Tuple2":
+                        return _U.eq(_v14._0,
+                          edgeIds) ? $Maybe.Just(_v14._1) : $Maybe.Nothing;}
+                     _U.badCase($moduleName,
+                     "between lines 92 and 94");
+                  }();
+               };
+               return _U.replace([["agents"
+                                  ,A2($Basics._op["++"],
+                                  A2($List.filterMap,check,moved),
+                                  spawnedAgents)]],
+               road);
+            }();
+         });
+         var newIncoming = A2($IntDict.map,
+         F2(function (nid,road) {
+            return A2(updateEdge,
+            {ctor: "_Tuple2"
+            ,_0: nid
+            ,_1: ctx.node.id},
+            road);
+         }),
+         ctx.incoming);
+         var newIncomingEdges = $List.map(function (_v18) {
+            return function () {
+               switch (_v18.ctor)
+               {case "_Tuple2": return {_: {}
+                                       ,from: _v18._0
+                                       ,label: _v18._1
+                                       ,to: ctx.node.id};}
+               _U.badCase($moduleName,
+               "on line 106, column 83 to 129");
+            }();
+         })($IntDict.toList(newIncoming));
+         var newOutgoing = A2($IntDict.map,
+         F2(function (nid,road) {
+            return A2(updateEdge,
+            {ctor: "_Tuple2"
+            ,_0: ctx.node.id
+            ,_1: nid},
+            road);
+         }),
+         ctx.outgoing);
+         var newOutgoingEdges = $List.map(function (_v22) {
+            return function () {
+               switch (_v22.ctor)
+               {case "_Tuple2": return {_: {}
+                                       ,from: ctx.node.id
+                                       ,label: _v22._1
+                                       ,to: _v22._0};}
+               _U.badCase($moduleName,
+               "on line 107, column 81 to 125");
+            }();
+         })($IntDict.toList(newOutgoing));
+         return {ctor: "_Tuple2"
+                ,_0: newIncomingEdges
+                ,_1: newOutgoingEdges};
+      }();
+   };
+   var pickUpSpeed = 1.0;
+   var updatePoint = F3(function (edges,
+   id,
+   point) {
+      return function () {
+         var _v26 = point.kind;
+         switch (_v26.ctor)
+         {case "BusStop":
+            return function () {
+                 var newProps = A2($List.any,
+                 function (e) {
+                    return _U.eq(e.to,
+                    id) && A2($List.any,
+                    function (a) {
+                       return _U.eq(a.travelled,
+                       e.label.length);
+                    },
+                    e.label.agents);
+                 },
+                 edges) ? _U.replace([["currentlyWaiting"
+                                      ,_v26._0.currentlyWaiting - pickUpSpeed]],
+                 _v26._0) : _U.replace([["currentlyWaiting"
+                                        ,_v26._0.currentlyWaiting + _v26._0.waitingDelta]],
+                 _v26._0);
+                 return _U.replace([["kind"
+                                    ,$Types.BusStop(newProps)]],
+                 point);
+              }();
+            case "CarSpawner":
+            return function () {
+                 var newProps = _U.cmp(_v26._0.nextIn,
+                 1) < 0 ? _U.replace([["nextIn"
+                                      ,_v26._0.interval]],
+                 _v26._0) : _U.replace([["nextIn"
+                                        ,_v26._0.nextIn - 1]],
+                 _v26._0);
+                 return _U.replace([["kind"
+                                    ,$Types.CarSpawner(newProps)]],
+                 point);
+              }();
+            case "Intersection":
+            return point;
+            case "StopSign":
+            return function () {
+                 var newProps = A2($List.any,
+                 function (e) {
+                    return _U.eq(e.to,
+                    id) && A2($List.any,
+                    function (a) {
+                       return _U.eq(a.travelled,
+                       e.label.length);
+                    },
+                    e.label.agents);
+                 },
+                 edges) ? _U.replace([["currentDelay"
+                                      ,_v26._0.currentDelay - 1]],
+                 _v26._0) : _U.replace([["currentDelay"
+                                        ,_v26._0.delay]],
+                 _v26._0);
+                 return _U.replace([["kind"
+                                    ,$Types.StopSign(newProps)]],
+                 point);
+              }();}
+         _U.badCase($moduleName,
+         "between lines 113 and 129");
+      }();
+   });
+   var updateNetwork = function (net) {
+      return function () {
+         var go = F2(function (ctx,
+         _v30) {
+            return function () {
+               switch (_v30.ctor)
+               {case "_Tuple2":
+                  return function () {
+                       var $ = updateContext(ctx),
+                       in$ = $._0,
+                       out$ = $._1;
+                       return {ctor: "_Tuple2"
+                              ,_0: A2($Basics._op["++"],
+                              _v30._0,
+                              in$)
+                              ,_1: A2($Basics._op["++"],
+                              _v30._1,
+                              out$)};
+                    }();}
+               _U.badCase($moduleName,
+               "on line 133, column 28 to 93");
+            }();
+         });
+         var $ = A3($Graph.fold,
+         go,
+         {ctor: "_Tuple2"
+         ,_0: _L.fromArray([])
+         ,_1: _L.fromArray([])},
+         net),
+         ins = $._0,
+         outs = $._1;
+         var mergedEdges = function () {
+            var intsToInt = F2(function (x,
+            y) {
+               return Math.pow(2,
+               x) * Math.pow(3,y);
+            });
+            var insDict = $IntDict.fromList(A2($List.map,
+            function (e) {
+               return {ctor: "_Tuple2"
+                      ,_0: A2(intsToInt,e.from,e.to)
+                      ,_1: e};
+            },
+            ins));
+            var outDict = $IntDict.fromList(A2($List.map,
+            function (e) {
+               return {ctor: "_Tuple2"
+                      ,_0: A2(intsToInt,e.from,e.to)
+                      ,_1: e};
+            },
+            outs));
+            var united = A3($IntDict.uniteWith,
+            F3(function (key,inE,outE) {
+               return function () {
+                  var inElabel = inE.label;
+                  return _U.replace([["label"
+                                     ,_U.replace([["agents"
+                                                  ,A2($Basics._op["++"],
+                                                  inE.label.agents,
+                                                  outE.label.agents)]],
+                                     inElabel)]],
+                  inE);
+               }();
+            }),
+            insDict,
+            outDict);
+            return $IntDict.values(united);
+         }();
+         var newNodes = $List.map(function (n) {
+            return _U.replace([["label"
+                               ,A3(updatePoint,
+                               mergedEdges,
+                               n.id,
+                               n.label)]],
+            n);
+         })($Graph.nodes(net));
+         return A2($Graph.fromNodesAndEdges,
+         newNodes,
+         mergedEdges);
+      }();
+   };
+   var example = function () {
+      var edge = F4(function (from,
+      to,
+      distance,
+      agents) {
+         return A3($Graph.Edge,
+         from,
+         to,
+         A2($Types.Road,
+         distance,
+         agents));
+      });
+      var edgesWithoutBuses = _L.fromArray([A4(edge,
+                                           1,
+                                           2,
+                                           1.0,
+                                           _L.fromArray([]))
+                                           ,A4(edge,
+                                           2,
+                                           4,
+                                           1.0,
+                                           _L.fromArray([]))
+                                           ,A4(edge,
+                                           2,
+                                           7,
+                                           A2($Helpers.dist,1,2),
+                                           _L.fromArray([]))
+                                           ,A4(edge,
+                                           3,
+                                           1,
+                                           1.0,
+                                           _L.fromArray([]))
+                                           ,A4(edge,
+                                           4,
+                                           3,
+                                           1.0,
+                                           _L.fromArray([]))
+                                           ,A4(edge,
+                                           4,
+                                           6,
+                                           1.0,
+                                           _L.fromArray([]))
+                                           ,A4(edge,
+                                           5,
+                                           3,
+                                           1.0,
+                                           _L.fromArray([]))
+                                           ,A4(edge,
+                                           6,
+                                           5,
+                                           1.0,
+                                           _L.fromArray([]))
+                                           ,A4(edge,
+                                           7,
+                                           6,
+                                           1.0,
+                                           _L.fromArray([]))]);
+      var node = F3(function (id,
+      _v34,
+      kind) {
+         return function () {
+            switch (_v34.ctor)
+            {case "_Tuple2":
+               return A2($Graph.Node,
+                 id,
+                 A2($Types.Point,
+                 A2($Types.Coords,
+                 _v34._0,
+                 _v34._1),
+                 kind));}
+            _U.badCase($moduleName,
+            "on line 25, column 28 to 60");
+         }();
+      });
+      var carRouteDown = $Helpers.carRouteFromList(_L.fromArray([5
+                                                                ,3
+                                                                ,1]));
+      var carRouteUp = $Helpers.carRouteFromList(_L.fromArray([2
+                                                              ,4
+                                                              ,6]));
+      var nodes = _L.fromArray([A3(node,
+                               1,
+                               {ctor: "_Tuple2"
+                               ,_0: 0.0
+                               ,_1: 0.0},
+                               $Types.BusStop({_: {}
+                                              ,currentlyWaiting: 0.0
+                                              ,waitingDelta: 0.1}))
+                               ,A3(node,
+                               2,
+                               {ctor: "_Tuple2"
+                               ,_0: 1.0
+                               ,_1: 0.0},
+                               $Types.CarSpawner({_: {}
+                                                 ,interval: 20
+                                                 ,nextIn: 0
+                                                 ,route: carRouteUp
+                                                 ,startEdge: {ctor: "_Tuple2"
+                                                             ,_0: 2
+                                                             ,_1: 4}}))
+                               ,A3(node,
+                               3,
+                               {ctor: "_Tuple2"
+                               ,_0: 0.0
+                               ,_1: 1.0},
+                               $Types.BusStop({_: {}
+                                              ,currentlyWaiting: 0.0
+                                              ,waitingDelta: 0.2}))
+                               ,A3(node,
+                               4,
+                               {ctor: "_Tuple2"
+                               ,_0: 1.0
+                               ,_1: 1.0},
+                               $Types.StopSign({_: {}
+                                               ,currentDelay: 0.0
+                                               ,delay: 8}))
+                               ,A3(node,
+                               5,
+                               {ctor: "_Tuple2"
+                               ,_0: 0.0
+                               ,_1: 2.0},
+                               $Types.CarSpawner({_: {}
+                                                 ,interval: 20
+                                                 ,nextIn: 0
+                                                 ,route: carRouteDown
+                                                 ,startEdge: {ctor: "_Tuple2"
+                                                             ,_0: 5
+                                                             ,_1: 3}}))
+                               ,A3(node,
+                               6,
+                               {ctor: "_Tuple2"
+                               ,_0: 1.0
+                               ,_1: 2.0},
+                               $Types.Intersection)
+                               ,A3(node,
+                               7,
+                               {ctor: "_Tuple2"
+                               ,_0: 2.0
+                               ,_1: 2.0},
+                               $Types.BusStop({_: {}
+                                              ,currentlyWaiting: 0.0
+                                              ,waitingDelta: 0.1}))]);
+      var networkWithoutBuses = A2($Graph.fromNodesAndEdges,
+      nodes,
+      edgesWithoutBuses);
+      var busKind = $Types.Bus(A2($Helpers.busRouteFromList,
+      _L.fromArray([7,3,1]),
+      networkWithoutBuses));
+      var bus = {_: {}
+                ,color: $Color.green
+                ,kind: busKind
+                ,lastEdge: $Maybe.Nothing
+                ,speed: 4.0e-2
+                ,totalDist: 0.0
+                ,travelled: 0.0};
+      var edges = _L.fromArray([A4(edge,
+                               1,
+                               2,
+                               1.0,
+                               _L.fromArray([bus]))
+                               ,A4(edge,
+                               2,
+                               4,
+                               1.0,
+                               _L.fromArray([]))
+                               ,A4(edge,
+                               2,
+                               7,
+                               A2($Helpers.dist,1,2),
+                               _L.fromArray([]))
+                               ,A4(edge,
+                               3,
+                               1,
+                               1.0,
+                               _L.fromArray([]))
+                               ,A4(edge,
+                               4,
+                               3,
+                               1.0,
+                               _L.fromArray([]))
+                               ,A4(edge,
+                               4,
+                               6,
+                               1.0,
+                               _L.fromArray([]))
+                               ,A4(edge,
+                               5,
+                               3,
+                               1.0,
+                               _L.fromArray([]))
+                               ,A4(edge,
+                               6,
+                               5,
+                               1.0,
+                               _L.fromArray([]))
+                               ,A4(edge,
+                               7,
+                               6,
+                               1.0,
+                               _L.fromArray([bus]))]);
+      return A2($Graph.fromNodesAndEdges,
+      nodes,
+      edges);
+   }();
+   var fps = 30;
+   var analyze = F2(function (net,
+   oldMetrics) {
+      return function () {
+         var currentlyWaiting = $List.sum($List.map(function (node) {
+            return $Basics.toFloat($Types.waitingPassengersAt(node.label));
+         })($Graph.nodes(net)));
+         var totalBusDistanceTravelled = $List.sum($List.map(function (edge) {
+            return $List.sum(A2($List.map,
+            $Types.busDistanceTravelled,
+            edge.label.agents));
+         })($Graph.edges(net)));
+         var numRoads = $Basics.toFloat($List.length($Graph.edges(net)));
+         var numBuses = $List.sum($List.map(function (edge) {
+            return $Basics.toFloat($List.length(A2($List.filter,
+            $Types.isBus,
+            edge.label.agents)));
+         })($Graph.edges(net)));
+         var avgBusDistanceTravelled = totalBusDistanceTravelled / numBuses;
+         var numAgents = $List.sum($List.map(function (edge) {
+            return $Basics.toFloat($List.length(edge.label.agents));
+         })($Graph.edges(net)));
+         var currentCongestion = numAgents / numRoads;
+         var metrics = A2($Dict.insert,
+         "avgBusDistanceTravelled",
+         avgBusDistanceTravelled)(A2($Dict.insert,
+         "totalWaiting",
+         currentlyWaiting + $Maybe.withDefault(0)(A2($Dict.get,
+         "totalWaiting",
+         oldMetrics)))(A2($Dict.insert,
+         "currentlyWaiting",
+         currentlyWaiting)(A2($Dict.insert,
+         "totalCongestion",
+         currentCongestion + $Maybe.withDefault(0)(A2($Dict.get,
+         "totalCongestion",
+         oldMetrics)))(A2($Dict.insert,
+         "currentCongestion",
+         currentCongestion)(A2($Dict.insert,
+         "ticks",
+         1 + $Maybe.withDefault(0)(A2($Dict.get,
+         "ticks",
+         oldMetrics)))(oldMetrics))))));
+         return $Debug.watch("metrics")(A2($Dict.insert,
+         "avgBusSpeed",
+         $Helpers.getOrFail("")(A2($Dict.get,
+         "avgBusDistanceTravelled",
+         metrics)) / $Helpers.getOrFail("")(A2($Dict.get,
+         "ticks",
+         metrics)) * fps)(A2($Dict.insert,
+         "avgWaiting",
+         $Helpers.getOrFail("")(A2($Dict.get,
+         "totalWaiting",
+         metrics)) / $Helpers.getOrFail("")(A2($Dict.get,
+         "ticks",
+         metrics)))(A2($Dict.insert,
+         "avgCongestion",
+         $Helpers.getOrFail("")(A2($Dict.get,
+         "totalCongestion",
+         metrics)) / $Helpers.getOrFail("")(A2($Dict.get,
+         "ticks",
+         metrics)))(metrics))));
+      }();
+   });
+   var update = function (_v38) {
+      return function () {
+         switch (_v38.ctor)
+         {case "State":
+            return A2($Types.State,
+              updateNetwork(_v38._0),
+              A2(analyze,_v38._0,_v38._1));}
+         _U.badCase($moduleName,
+         "on line 171, column 34 to 88");
+      }();
+   };
+   var main = function () {
+      var initialState = A2($Types.State,
+      example,
+      $Dict.empty);
+      var state = A3($Signal.foldp,
+      F2(function (tick,s) {
+         return update(s);
+      }),
+      initialState,
+      $Time.fps(fps));
+      return A2($Signal.map,
+      $RenderNetwork.render,
+      state);
+   }();
+   _elm.Network.values = {_op: _op
+                         ,fps: fps
+                         ,example: example
+                         ,pickUpSpeed: pickUpSpeed
+                         ,moveAgents: moveAgents
+                         ,updateContext: updateContext
+                         ,updatePoint: updatePoint
+                         ,updateNetwork: updateNetwork
+                         ,analyze: analyze
+                         ,update: update
+                         ,main: main};
+   return _elm.Network.values;
+};

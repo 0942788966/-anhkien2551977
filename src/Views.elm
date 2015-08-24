@@ -36,7 +36,7 @@ renderTitleScreen : Address Action -> Html
 renderTitleScreen address =
         let
             titleBackgroundColor = Color.rgb 94 5 135
-            titleImage = G.image 800 600 "../game_logo.png"
+            titleImage = G.image 666 500 "../game_logo.png"
         in
             Html.div
                 []
@@ -60,7 +60,7 @@ renderChooseLevel address model =
             Html.div [style [("color", "white"),
                              ("background-color", "rgb(94, 5, 135"),
                              ("width", "800px"),
-                             ("height", "600px")]
+                             ("height", "500px")]
                      ] 
             [
                 Html.text "Choose a level" ,
@@ -108,7 +108,7 @@ emailTemplate msg =
                 [("backgroundColor", "rgb(94,5,135"),
                  boxShadowCss,
                  ("width", "800px"),
-                 ("height", "600px"),
+                 ("height", "500px"),
                  ("color", "white"),
                  ("padding", "5px")
                 ]
@@ -149,8 +149,7 @@ renderLevel levelNum address model =
             gameClock model
         ],
 
-        Html.div [style [("position", "absolute"), ("right", "20px"), ("top", "10px")]]
-            --[Html.fromElement <| trafficGrid model]
+        Html.div [style [("position", "absolute"), ("left", "412px"), ("top", "10px")]]
             [Html.fromElement <| trafficGrid model]
     ]
 
@@ -196,7 +195,7 @@ controlPane contents =
    let styleAttrs = [("position", "absolute"),
                      boxShadowCss,
                      ("width", "400px"),
-                     ("height", "500px"),
+                     ("height", "400px"),
                      ("left", "10px"),
                      ("top", "10px"),
                      whiteBackgroundCss
@@ -210,7 +209,7 @@ gameClock model =
                         ("position", "absolute"),
                         boxShadowCss,
                         ("left", "100px"),
-                        ("top", "520px"),
+                        ("top", "420px"),
                         ("width", "300px"),
                         ("height", "200px"),
                         whiteBackgroundCss

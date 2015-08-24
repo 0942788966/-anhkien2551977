@@ -91,7 +91,7 @@ renderMessageScreen n address = case Array.get n emailTexts of
                     ]
                     [
                         emailTemplate emailText,
-                        gameButton address (GoToScreen <| LevelScreen 0) "Begin workday..."
+                        gameButton address (GoToScreen <| LevelScreen n) "Begin workday..."
                     ]
              ]
 
@@ -156,16 +156,12 @@ renderLevel levelNum address model =
 
 renderEndLevel : Int -> Html
 renderEndLevel levelNum =
-  Html.body []
+  Html.body [] []
 
 busStopsWidget : Address Action -> Model -> Html
 busStopsWidget address model =
     let
         stops = model.levelData.stops
-
-        stopNames : List String
-        stopNames = L.map (\(BusStop name) -> name) stops
-
 
         stopButton : Int -> String -> Html
         stopButton idx name =
@@ -184,7 +180,7 @@ busStopsWidget address model =
                 [Html.text name]
 
         stopButtons : List Html
-        stopButtons = L.indexedMap stopButton stopNames
+        stopButtons = L.indexedMap stopButton stops
 
     in Html.div []
         [

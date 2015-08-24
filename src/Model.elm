@@ -9,6 +9,7 @@ import DraggableForm
 
 import Graph exposing (NodeId)
 
+import Helpers exposing (..)
 import Types
 import Network
 import Levels
@@ -38,7 +39,7 @@ type StopDirection = StopUp | StopDown | MakeActiveStopIndex Int
 type alias LevelData = {
     state             : Types.State,
     networkGenerator  : Types.Input -> Types.Network,
-    stops             : List BusStop,
+    stops             : List String,
     stopToNodeMapping : Dict String NodeId,
     activeStopIdx     : Maybe Int,
     changesRemaining  : Int,
@@ -55,9 +56,6 @@ defaultLevelData = {
     changesRemaining  = 0,
     timeLimit         = GameTime 10000
     }
-
-
-type BusStop = BusStop String
 
 type alias Model = {
     screen        : ScreenState,
@@ -85,13 +83,10 @@ initialModel = {
 levelDataForScreen : ScreenState -> LevelData
 levelDataForScreen screen = case screen of
     LevelScreen n -> case A.get n levelParamsList of
-        Just levelParams ->
-            let
-                stops = [BusStop "A", BusStop "B", BusStop "C"]
-                stopsMapping = Dict.fromList [("A", 1), ("B", 3), ("C", 5)]
-                changesRemaining = levelParams.changeLimit
-            in  
-               { defaultLevelData | stops <- stops, stopToNodeMapping <- stopsMapping, changesRemaining <- changesRemaining }
-        Nothing -> defaultLevelData
+        Just params -> let input = List.map (\s -> Dict.get s params.stopToNodeMapping |> getOrFail ("unknown bus stop " ++ s)) params.stops
+                           state = Types.State (params.level input) Dict.empty
+                         in 
+                           { defaultLevelData | state <- state, stops <- params.stops, stopToNodeMapping <- params.stopToNodeMapping, changesRemaining <- params.changeLimit }
+        Nothing -> Debug.crash ("Level not found: " ++ toString n)
     _ -> defaultLevelData
 

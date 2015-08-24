@@ -143,6 +143,7 @@ renderLevel levelNum address model =
                 gameButton address (GoToScreen TitleScreen) "Return to title",
                 gameButton address ToggleAdvancingTime "Play / Pause",
                 gameButton address ResetTime "Stop",
+                gameButton address ResetState "Reset",
                 busStopsWidget address model
                 ],
             gameClock model
@@ -235,18 +236,18 @@ gameClock model =
                ]
 
         clockCollage =
-            let 
+            let
                 timeInMin t = toFloat ((\(GameTime n) -> n) t)
                 hand len time =
                    let
                        angle = degrees (90 - 6 * time)
-                   in 
+                   in
                       segment (0,0) (fromPolar (len, angle))
                 hourHand t = hand 50 (t/12) |> traced (solid Color.charcoal)
                 minuteHand t = hand 90 t |> traced (solid Color.orange)
             in
                 collage 200 200
-                    [ 
+                    [
                         filled Color.lightGrey (ngon 30 90),
                         outlined (solid Color.grey) (ngon 30 90),
                         hourHand <| timeInMin model.time,

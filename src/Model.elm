@@ -24,6 +24,7 @@ incrementTime curTime = (\(GameTime n) -> GameTime (n+1)) curTime
 type Action = GoToScreen ScreenState
             | TickRealtime Time
             | ResetTime
+            | ResetState
             | ToggleAdvancingTime
             | ChangeStopOrder StopDirection
 

@@ -71,8 +71,14 @@ update action oldModel =
                 { oldModel | realtimeMs <- Time.inMilliseconds t,
                              counter <- oldModel.counter + (floor <| Time.inMilliseconds t - oldModel.realtimeMs)
                 }
-
         ResetTime -> { oldModel | realtimeMs <- 0,
+                                  time <- GameTime 0,
+                                  timeAdvancing <- False,
+                                  counter <- 0,
+                                  network <- (Types.State (Levels.lvl1 [1, 5, 3]) Dict.empty)
+                     }
+
+        ResetState -> { oldModel | realtimeMs <- 0,
                                   time <- GameTime 0,
                                   timeAdvancing <- False,
                                   counter <- 0,

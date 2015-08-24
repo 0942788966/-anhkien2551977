@@ -18,6 +18,10 @@ clickedStyle : GC.LineStyle
 clickedStyle = let def = GC.defaultLine in
   { def | width <- 2, cap <- GC.Flat, color <- Color.blue }
 
+edgeStyle : GC.LineStyle
+edgeStyle = let def = GC.defaultLine in
+  { def | width <- 2, cap <- GC.Round, color <- Color.lightBlue }
+
 grid : Int -> Float -> Float -> Form
 grid size width height =
   let cellSize = toFloat size
@@ -57,7 +61,8 @@ toggle x s = if Set.member x s then Set.remove x s else Set.insert x s
 
 type alias EditorState = {
     nodes    : Set (Int, Int),
-    selected : Set (Int, Int)
+    selected : Maybe (Int, Int),
+    edges    : Set ((Int, Int), (Int, Int))
   }
 
 addNode : (Int, Int) -> EditorState -> EditorState
@@ -66,35 +71,69 @@ addNode node state = { state | nodes <- Set.insert node state.nodes }
 deleteNode : (Int, Int) -> EditorState -> EditorState
 deleteNode node state = { state | nodes <- Set.remove node state.nodes }
 
-toggleSelect : (Int, Int) -> EditorState -> EditorState
-toggleSelect node state = if Set.member node state.nodes
-                          then { state | selected <- toggle node state.selected }
-                          else state
+guard : Bool -> x -> Maybe x
+guard condition x = if condition then Just x else Nothing
+
+toggleSelect : Bool -> (Int, Int) -> EditorState -> EditorState
+toggleSelect addingEdge node state =
+  if Set.member node state.nodes
+  then (case state.selected of
+         Just p ->
+           let s' = addEdge (p, node) state
+           in
+             if addingEdge && node /= p
+             then { s' | selected <- Nothing }
+             else { state | selected <- guard (p /= node) node }
+         Nothing -> { state | selected <- Just node })
+  else { state | selected <- Nothing }
 
 deleteSelected : Bool -> EditorState -> EditorState
-deleteSelected control state = 
-  if control 
-  then { state | nodes <- Set.diff state.nodes state.selected, selected <- Set.empty }
-  else state
+deleteSelected control state =
+  case state.selected of
+    Just node -> if control
+                 then { state | nodes <- Set.remove node state.nodes, selected <- Nothing }
+                 else state
+    Nothing -> state
 
 emptyState : EditorState
-emptyState = { nodes = Set.empty, selected = Set.empty }
+emptyState = { nodes = Set.empty, selected = Nothing, edges = Set.empty }
+
+addEdge : ((Int, Int), (Int, Int)) -> EditorState -> EditorState
+addEdge edge state = { state | edges <- Set.insert edge state.edges }
+
+arrow (x1, y1) (x2', y2') =
+  let x2 = if x2' > x1 then x2' - 20 else x2' + 20
+      y2 = if y2' > y1 then y2' - 20 else y2' + 20
+      (p1, p2) = ((x1, y1), (x2, y2))
+      stem = GC.segment p1 p2
+      (r, angle) = toPolar (x2 - x1, y2 - y1)
+      cap = GC.ngon 3 10 |> GC.filled Color.lightBlue |> GC.rotate angle |> GC.move p2
+  in
+    GC.group [GC.traced edgeStyle stem, cap]
+
+edgeSegment (p1, p2) =
+  let wrap (x, y) = (toFloat x, toFloat y) in
+  arrow (wrap p1) (wrap p2)
 
 render : EditorState -> List Form
 render state =
-  let placeholders = (List.map placeholder <| Set.toList state.nodes)
-      selectedCircles = (List.map selectedCircle <| Set.toList state.selected)
+  let placeholders = List.map placeholder <| Set.toList state.nodes
+      selectedCircles = maybeToList <| Maybe.map selectedCircle state.selected
+      edges = List.map edgeSegment <| Set.toList state.edges
   in
-    placeholders ++ selectedCircles
+    placeholders ++ selectedCircles ++ edges
 
 main =
-  let onGrid forms = (grid 30 1500 900)::forms
+  let onGrid forms = (grid 50 1500 1000)::forms
       convert (x, y) = (x - 1500 // 2, -(y - 900 // 2))
-      points = Signal.map (snapTo 30 << convert) Mouse.position
+      points = Signal.map (snapTo 50 << convert) Mouse.position
       clicked = Signal.sampleOn Mouse.clicks points
       deletes = Signal.map deleteSelected <| Keyboard.isDown 46
 
-      clicks = Signal.map (\ p s -> addNode p <| toggleSelect p s) clicked
+      addingEdge = Signal.sampleOn clicked Keyboard.shift
+      handleSelect addingEdge point state =
+        addNode point <| toggleSelect addingEdge point state
+      clicks = Signal.map2 handleSelect addingEdge clicked
       changes = Signal.mergeMany [clicks, deletes]
       states = Signal.foldp (\ f s -> f s) emptyState changes
 

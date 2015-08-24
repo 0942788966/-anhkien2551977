@@ -23,6 +23,11 @@ emailTexts = Array.fromList
             Html.text "Thaddeus Klabbernick",
             br,
             Html.text "Chief Executive Officer, Süpër Inc."
+        ],
+
+        Html.div []
+        [
+            Html.text "Blah blah blah Well done! Blah blah blah you made people unhappy! Blah blah blah here's level 2!"
         ]
     ]
 

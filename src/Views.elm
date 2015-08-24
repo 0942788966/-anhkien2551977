@@ -1,6 +1,5 @@
 module Views where
 
-import DraggableForm
 import Html exposing (Html)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (style)
@@ -141,10 +140,10 @@ renderLevel levelNum address model =
         Html.div []
         [
             controlPane [
-                gameButton address ResetTime "Reset",
                 gameButton address (GoToScreen TitleScreen) "Return to title",
-                gameButton address ToggleAdvancingTime "Toggle time",
-                busStopsWidget address model.levelData
+                gameButton address ToggleAdvancingTime "Play / Pause",
+                gameButton address ResetTime "Stop",
+                busStopsWidget address model
                 ],
             gameClock model
         ],
@@ -154,16 +153,41 @@ renderLevel levelNum address model =
             [Html.fromElement <| trafficGrid model]
     ]
 
-busStopsWidget : Address Action -> LevelData -> Html
-busStopsWidget address levelData =
+busStopsWidget : Address Action -> Model -> Html
+busStopsWidget address model =
     let
-        stops = levelData.stops
+        stops = model.levelData.stops
+
+        stopNames : List String
         stopNames = L.map (\(BusStop name) -> name) stops
+
+
+        stopButton : Int -> String -> Html
+        stopButton idx name =
+            let
+                bkgColor = case model.levelData.activeStopIdx of
+                    Just i -> if i == idx then "#ff0000" else "#ffffff"
+                    Nothing -> "#ffffff"
+            in
+            Html.button
+                [style [("border", "1px solid grey"),
+                        ("background-color", bkgColor)
+                       ],
+                 onClick address <| ChangeStopOrder (MakeActiveStopIndex idx)
+                ]
+
+                [Html.text name]
+
+        stopButtons : List Html
+        stopButtons = L.indexedMap stopButton stopNames
+
     in Html.div []
         [
-            Html.p [] [Html.text "Stop order"],
-            Html.fromElement <| G.flow G.down
-                (L.map (\x -> G.leftAligned (T.fromString x)) stopNames)
+            Html.p [] [Html.text "Change bus stop order"],
+            Html.p [] [Html.text <| "Additional changes: " ++ (toString model.levelData.changesRemaining)],
+            Html.div [style [("border", "1px solid black")]] stopButtons,
+            Html.button [onClick address <| ChangeStopOrder StopUp] [Html.text "^"],
+            Html.button [onClick address <| ChangeStopOrder StopDown] [Html.text "v"]
         ]
 
 controlPane : List Html -> Html

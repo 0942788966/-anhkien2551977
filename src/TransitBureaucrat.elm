@@ -14,6 +14,31 @@ import Network
 import Types
 import Views exposing (..)
 import Model exposing (..)
+import Helpers exposing (moveIthMemberUp, moveIthMemberDown)
+import Levels
+
+updateStopOrder : StopDirection -> Model ->  Model
+updateStopOrder sd oldModel =
+    if oldModel.levelData.changesRemaining == 0
+    then oldModel
+    else let 
+        oldLevelData = oldModel.levelData
+        newLevelData =
+            case sd of
+                StopUp -> case oldLevelData.activeStopIdx of
+                    Just i -> { oldLevelData | stops <- moveIthMemberUp i oldLevelData.stops,
+                                               activeStopIdx <- Nothing,
+                                               changesRemaining <- (oldLevelData.changesRemaining - 1)
+                              }
+                    Nothing -> oldLevelData
+                StopDown -> case oldLevelData.activeStopIdx of
+                    Just i -> { oldLevelData | stops <- moveIthMemberDown i oldLevelData.stops,
+                                               activeStopIdx <- Nothing, 
+                                               changesRemaining <- (oldLevelData.changesRemaining - 1)
+                               }
+                    Nothing -> oldLevelData
+                MakeActiveStopIndex i -> { oldLevelData | activeStopIdx <- Just i }
+        in { oldModel | levelData <- newLevelData }
 
 update : Action -> Model -> (Model, E.Effects Action)
 update action oldModel =
@@ -22,6 +47,7 @@ update action oldModel =
 
     newModel : Model
     newModel = case action of
+        ChangeStopOrder sd ->  updateStopOrder sd oldModel
         GoToScreen newScreen -> { oldModel | screen <- newScreen,
                                              levelData <- levelDataForScreen newScreen
    
@@ -50,7 +76,8 @@ update action oldModel =
                                   time <- GameTime 0,
                                   timeAdvancing <- False,
                                   counter <- 0,
-                                  network <- (Types.State Network.example Dict.empty)
+                                  network <- (Types.State (Levels.lvl1 [1, 5, 3]) Dict.empty),
+                                  levelData <- levelDataForScreen oldModel.screen
                      }
 
 

@@ -1,10 +1,13 @@
 module Helpers where
 
+import Dict exposing (Dict)
 import Debug
 
-import Graph exposing (NodeId, NodeContext)
-import Graph.Tree as Tree exposing (Tree)
+import Graph exposing (Graph, NodeId, NodeContext)
+import Graph.Tree as Tree exposing (Tree, Forest)
 import IntDict
+import List as L
+import Array as A
 
 import Types exposing (..)
 
@@ -36,38 +39,66 @@ addCoords (x1,y1) (x2,y2) = (x1+x2, y1+y2)
 
 
 
+type BfsResults = Dict NodeId (List NodeId)
+
 findPath : Network -> (NodeId, NodeId) -> List NodeId
 findPath net (startId, goalId) =
-  let dfsTree = Graph.dfsTree startId net
+  let paths = findAllPaths net startId
   in
-    findPathInTree goalId dfsTree |> getOrFail "couldn't find path!"
+    Dict.get goalId paths |> getOrFail "couldn't find path!"
 
-findPathInTree : NodeId -> Tree (NodeContext Point Road) -> Maybe (List NodeId)
-findPathInTree goalId tree =
-  case Tree.root tree of
-    Just (ctx, forest) -> 
-      if ctx.node.id == goalId
-      then Just [goalId]
-      else let paths = List.filterMap (findPathInTree goalId) forest
-           in
-             List.head paths |> Maybe.map (\lst -> ctx.node.id :: lst)
-    Nothing -> Nothing
+findAllPaths : Network -> NodeId -> Dict NodeId (List NodeId)
+findAllPaths net startId =
+  let bfsVisitor ctxs depth acc = let nodeIds = List.map (\ctx -> ctx.node.id) ctxs
+                                      currentNodeId = getOrFail "unknown nodeId" <| List.head nodeIds
+                                  in 
+                                    case Dict.get currentNodeId acc of
+                                      Just path -> if List.length path > List.length nodeIds
+                                                   then Dict.insert currentNodeId (List.reverse nodeIds) acc
+                                                   else acc
+                                      Nothing -> Dict.insert currentNodeId (List.reverse nodeIds) acc
+
+      (results, graph) = Graph.guidedBfs Graph.alongOutgoingEdges bfsVisitor [startId] Dict.empty net
+  in
+    results
 
 
-
-busRouteFromList : List NodeId -> Network -> Route
+busRouteFromList : List NodeId -> Network -> BusRoute
 busRouteFromList x net = case x of
-  []    -> IntDict.empty
+  []    -> Dict.empty
   n::ns -> let pairs = List.map2 (,) (n::ns) (ns ++ [n])
                subroutes = List.map (findPath net) pairs
                combinedList = List.concatMap (List.drop 1) subroutes
-
-               first = List.head combinedList |> getOrFail ""
-               rest = List.tail combinedList |> getOrFail ""
            in 
-             IntDict.fromList <| List.map2 (,) combinedList (rest ++ [first])
+             case combinedList of
+               a::(b::rest) -> Dict.fromList <| List.map3 (\a b c -> ((a, b), c)) (a::(b::rest)) (b::rest ++ [a]) (rest ++ [a,b])
+             
 
-carRouteFromList : List NodeId -> Route
+carRouteFromList : List NodeId -> CarRoute
 carRouteFromList x = case x of
-  []    -> IntDict.empty
-  n::ns -> IntDict.fromList <| List.map2 (,) (dropRight (n::ns)) (ns)
+  []    -> Dict.empty
+  n::ns -> Dict.fromList <| List.map2 (,) (dropRight (n::ns)) (ns)
+
+moveIthMemberDown : Int -> List a -> List a
+moveIthMemberDown i ls =
+    let
+        ar = A.fromList ls
+        elem = A.get i ar
+        nextElem = A.get (i+1) ar
+        beginning = L.take i ls
+        end = L.drop (i+2) ls
+    in case (elem, nextElem) of 
+        (Just e1, Just e2) -> beginning ++ [e2] ++ [e1] ++ end
+        _ -> ls
+
+moveIthMemberUp : Int -> List a -> List a
+moveIthMemberUp i ls = 
+    let
+        ar = A.fromList ls
+        elem = A.get i ar
+        prevElem = A.get (i-1) ar
+        beginning = L.take (i-1) ls
+        end = L.drop (i+1) ls
+    in case (elem, prevElem) of 
+        (Just e1, Just e0) -> beginning ++ [e1] ++ [e0] ++ end
+        _ -> ls

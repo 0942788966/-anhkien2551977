@@ -18,9 +18,17 @@ type Action = GoToScreen ScreenState
             | TickRealtime Time
             | ResetTime
             | ToggleAdvancingTime
+            | ChangeStopOrder
 
-type alias Model = { numCars: Int,
+type alias LevelData = {
+    stops: List BusStop
+}
+
+type BusStop = BusStop String
+
+type alias Model = {
                     screen: ScreenState,
+                    levelData: LevelData,
                     time: GameTime,
                     timeAdvancing: Bool,
                     network: Types.Network,
@@ -29,10 +37,11 @@ type alias Model = { numCars: Int,
                     tickRate : Int -- one game time tick every tickRate ms
                    }
 
+
 initialModel: Model
 initialModel = {
-        numCars = 0,
         screen = TitleScreen,
+        levelData = { stops = [] },
         time = GameTime 0,
         timeAdvancing = False,
         network = Network.example,
@@ -40,4 +49,10 @@ initialModel = {
         counter = 0,
         tickRate = 10
     }
+
+
+levelDataForScreen : ScreenState -> LevelData
+levelDataForScreen screen = case screen of
+    LevelScreen n -> { stops = [BusStop "A", BusStop "B", BusStop "C", BusStop "D"] }
+    _ -> { stops = [] }
 

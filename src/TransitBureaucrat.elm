@@ -20,7 +20,10 @@ update action oldModel =
 
     newModel : Model
     newModel = case action of
-        GoToScreen newScreen -> { oldModel | screen <- newScreen }
+        GoToScreen newScreen -> { oldModel | screen <- newScreen,
+                                             levelData <- levelDataForScreen newScreen
+   
+                                 }
         ToggleAdvancingTime -> { oldModel | timeAdvancing <- not oldModel.timeAdvancing }
         TickRealtime t ->
             if readyForNewGameTick oldModel.counter

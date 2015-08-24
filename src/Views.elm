@@ -141,7 +141,8 @@ renderLevel levelNum address model =
             controlPane [
                 gameButton address ResetTime "Reset",
                 gameButton address (GoToScreen TitleScreen) "Return to title",
-                gameButton address ToggleAdvancingTime "Toggle time"
+                gameButton address ToggleAdvancingTime "Toggle time",
+                busStopsWidget address model.levelData
                 ],
             gameClock model
         ],
@@ -150,6 +151,17 @@ renderLevel levelNum address model =
             --[Html.fromElement <| trafficGrid model]
             [Html.fromElement <| trafficGrid model]
     ]
+
+busStopsWidget : Address Action -> LevelData -> Html
+busStopsWidget address levelData =
+    let
+        stops = levelData.stops
+        stopNames = L.map (\(BusStop name) -> name) stops
+    in Html.div []
+        [
+            Html.p [] [Html.text "Stop order"],
+            Html.ul [] (L.map (\x -> Html.li [] [Html.text x]) stopNames)
+        ]
 
 controlPane : List Html -> Html
 controlPane contents =

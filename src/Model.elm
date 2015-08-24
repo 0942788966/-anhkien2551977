@@ -39,6 +39,7 @@ type StopDirection = StopUp | StopDown | MakeActiveStopIndex Int
 type alias LevelData = {
     state             : Types.State,
     networkGenerator  : Types.Input -> Types.Network,
+    trackedMetrics    : List Types.TrackedMetric,
     stops             : List String,
     stopToNodeMapping : Dict String NodeId,
     activeStopIdx     : Maybe Int,
@@ -54,7 +55,8 @@ defaultLevelData = {
     stopToNodeMapping = Dict.empty,
     activeStopIdx     = Nothing,
     changesRemaining  = 0,
-    timeLimit         = GameTime 10000
+    timeLimit         = GameTime 10000,
+    trackedMetrics    = []
     }
 
 type alias Model = {
@@ -90,7 +92,8 @@ levelDataForScreen screen = case screen of
                                                 networkGenerator <- params.level,
                                                 stops <- params.stops, 
                                                 stopToNodeMapping <- params.stopToNodeMapping, 
-                                                changesRemaining <- params.changeLimit }
+                                                changesRemaining <- params.changeLimit,
+                                                trackedMetrics <- params.trackedMetrics }
         Nothing -> Debug.crash ("Level not found: " ++ toString n)
     _ -> defaultLevelData
 

@@ -117,9 +117,13 @@ update action oldModel =
                      }
   in (newModel, E.tick TickRealtime)
 
--- TODO TODO TODO: Actually put something reasonable here --
 levelPassed : Model -> Bool
-levelPassed model = True
+levelPassed model = 
+  let isBad metrics trackedMetric = let value = Dict.get trackedMetric.metricName metrics |> getOrFail ("couldn't find metric: " ++ trackedMetric.metricName)
+                                    in trackedMetric.isBadWhen value
+  in
+    case model.levelData.state of
+      Types.State _ metrics -> List.all (isBad metrics) model.levelData.trackedMetrics 
 
 resetStateInLevelData : LevelData -> LevelData
 resetStateInLevelData levelData =

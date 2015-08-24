@@ -78,7 +78,8 @@ renderMessageScreen n address = case Array.get n emailTexts of
                         ("background-color", levelBackgroundCss),
                         ("position", "absolute"),
                         ("width", "100%"),
-                        ("height", "100%")
+                        ("height", "100%"),
+                        ("margin", "0")
                     ]
                   ]
              [
@@ -133,7 +134,8 @@ renderLevel levelNum address model =
                 [("background-color", levelBackgroundCss),
                  ("position", "absolute"),
                  ("width", "100%"),
-                 ("height", "100%")
+                 ("height", "100%"),
+                 ("margin", "0")
                 ]
              ]
     [
@@ -152,10 +154,6 @@ renderLevel levelNum address model =
         Html.div [style [("position", "absolute"), ("left", "412px"), ("top", "10px")]]
             [Html.fromElement <| trafficGrid model]
     ]
-
-renderEndLevel : Int -> Html
-renderEndLevel levelNum =
-  Html.body [] []
 
 busStopsWidget : Address Action -> Model -> Html
 busStopsWidget address model =
@@ -258,6 +256,5 @@ gameClock model =
 
 trafficGrid : Model -> G.Element
 trafficGrid model =
-   let network = (\(Types.State network _) -> network) model.levelData.state
-   in RenderNetwork.renderNetwork 0.9 network
+   RenderNetwork.render 0.9 model.levelData.state
 

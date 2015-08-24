@@ -163,6 +163,8 @@ cellSize = 50
 convert (x, y) = (x - width // 2, -(y - height // 2))
 unconvert (x, y) = (x + width // 2, -y + height // 2)
 
+toSummary network = (Graph.nodes network, Graph.edges network)
+
 main =
   let onGrid forms = (grid cellSize width height)::forms
       convert (x, y) = (x - width // 2, -(y - height // 2))
@@ -179,7 +181,7 @@ main =
 
       shadows = Signal.map shadow points
 
-      net = Signal.map (show << toNetwork) states
+      net = Signal.map (show << toSummary << toNetwork) states
       editor = Signal.map (GC.collage width height << onGrid << render) states
   in
     Signal.map2 (\ a b -> flow down [b, a]) net editor

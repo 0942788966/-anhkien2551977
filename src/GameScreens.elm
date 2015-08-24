@@ -29,6 +29,11 @@ levelParamsList = Array.fromList
         , stops = ["A", "B", "C"] 
         , stopToNodeMapping = Dict.fromList [("A", 7), ("B", 3), ("C", 1)] 
         , trackedMetrics = []
+        },
+        { level = Levels.lvl3
+        , changeLimit = 1
+        , stops = ["A", "B", "C"]
+        , stopToNodeMapping = Dict.fromList [("A", 7), ("B", 3), ("C", 1)]
         }
     ]
 
@@ -36,5 +41,7 @@ gameScreens = [
         (Message 0, "Email"),
         (Level 0, "Monday Morning MTA Madness"),
         (Message 1, "Email"),
-        (Level 1, "Rush Hour")
+        (Level 1, "Rush Hour"),
+        (Message 1, "Email"),
+        (Level 2, "Big Map?")
     ]

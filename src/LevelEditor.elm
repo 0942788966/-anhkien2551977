@@ -3,6 +3,7 @@ module LevelEditor where
 import Color
 import Dict
 import Debug
+import Graphics.Element exposing (flow, down, show)
 import Graphics.Collage as GC exposing (Form)
 import Keyboard
 import Mouse
@@ -131,8 +132,10 @@ dist : (Float, Float) -> (Float, Float) -> Float
 dist (x1, y1) (x2, y2) = sqrt <| (x1 - x2)^2 + (y1 - y2)^2
 
 
+toNetwork : EditorState -> Network
 toNetwork state = 
-  let nodes = Set.toList state.nodes
+  let wrapPoint (x, y) = (toFloat x, toFloat y)
+      nodes = Set.toList state.nodes |> List.map wrapPoint
       nodeMap = Dict.fromList (List.map2 (\ i s -> (s, i)) [1..List.length nodes] nodes)
 
       makePoint (x, y) = { coords = { x = x, y = y }, kind = Types.Intersection }
@@ -144,9 +147,10 @@ toNetwork state =
             length = dist p1 p2
         in
           { to = to, from = from, label = { length = length, agents = [] } }
-      edges = Set.toList state.edges |> List.map makeEdge
+      wrapPoints ((x1, y1), (x2, y2)) = ((toFloat x1, toFloat y1), (toFloat x2, toFloat y2))
+      edges = Set.toList state.edges |> List.map (makeEdge << wrapPoints)
   in
-    Graph.fromNodesAndEdges points edges
+    Graph.fromNodesAndEdges points edges |> Debug.watch "net"
 
 main =
   let onGrid forms = (grid 50 1500 1000)::forms
@@ -163,5 +167,8 @@ main =
       states = Signal.foldp (\ f s -> f s) emptyState changes
 
       shadows = Signal.map shadow points
+
+      net = Signal.map (show << toNetwork) states
+      editor = Signal.map (GC.collage 1500 900 << onGrid << render) states
   in
-    Signal.map (GC.collage 1500 900 << onGrid << render) states
+    Signal.map2 (\ a b -> flow down [b, a]) net editor

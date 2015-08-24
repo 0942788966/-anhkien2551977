@@ -61,6 +61,12 @@ busDistanceTravelled agent =
     Bus _ -> agent.totalDist
     Car _ -> 0
 
+waitingPassengersAt : Point -> Int
+waitingPassengersAt point =
+  case point.kind of
+    BusStop props -> round props.currentlyWaiting
+    _             -> 0
+
 canMoveThrough : Agent -> Point -> Bool
 canMoveThrough agent point =
   case (point.kind, agent.kind) of

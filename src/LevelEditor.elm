@@ -157,7 +157,7 @@ main =
       convert (x, y) = (x - 1500 // 2, -(y - 900 // 2))
       points = Signal.map (snapTo 50 << convert) Mouse.position
       clicked = Signal.sampleOn Mouse.clicks points
-      deletes = Signal.map deleteSelected <| Keyboard.isDown 46
+      deletes = Signal.map deleteSelected <| Signal.mergeMany [Keyboard.isDown 46, Keyboard.isDown 88]
 
       addingEdge = Signal.sampleOn clicked Keyboard.shift
       handleSelect addingEdge point state =

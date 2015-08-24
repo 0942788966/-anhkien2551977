@@ -2,8 +2,8 @@ module Helpers where
 
 import Debug
 
-import Graph exposing (NodeId, NodeContext)
-import Graph.Tree as Tree exposing (Tree)
+import Graph exposing (Graph, NodeId, NodeContext)
+import Graph.Tree as Tree exposing (Tree, Forest)
 import IntDict
 
 import Types exposing (..)
@@ -50,7 +50,7 @@ findPathInTree goalId tree =
       then Just [goalId]
       else let paths = List.filterMap (findPathInTree goalId) forest
            in
-             List.head paths |> Maybe.map (\lst -> ctx.node.id :: lst)
+             List.sortBy List.length paths |> Debug.watch "paths" |> List.reverse |> List.head |> Maybe.map (\lst -> ctx.node.id :: lst)
     Nothing -> Nothing
 
 
@@ -59,8 +59,8 @@ busRouteFromList : List NodeId -> Network -> Route
 busRouteFromList x net = case x of
   []    -> IntDict.empty
   n::ns -> let pairs = List.map2 (,) (n::ns) (ns ++ [n])
-               subroutes = List.map (findPath net) pairs
-               combinedList = List.concatMap (List.drop 1) subroutes
+               subroutes = List.map (findPath net) pairs |> Debug.watch "subroutes"
+               combinedList = List.concatMap (List.drop 1) subroutes |> Debug.watch "combinedList"
 
                first = List.head combinedList |> getOrFail ""
                rest = List.tail combinedList |> getOrFail ""

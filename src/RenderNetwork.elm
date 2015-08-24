@@ -12,7 +12,7 @@ import Types exposing (..)
 import Helpers exposing (..)
 
 size : Float
-size = 3.5
+size = 3
 
 roadStyle : GC.LineStyle
 roadStyle = let def = GC.defaultLine in

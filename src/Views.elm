@@ -281,7 +281,7 @@ trafficGrid : Model -> G.Element
 trafficGrid model =
   case model.levelData.state of
     Types.State network metrics -> 
-      let networkGrid = RenderNetwork.renderNetwork 0.9 network -- RenderNetwork.render 0.9 model.levelData.state
+      let networkGrid = RenderNetwork.renderNetwork model.levelData.scalingFactor model.levelData.coordScalingFactor network -- RenderNetwork.render 0.9 model.levelData.state
           indicators = G.flow G.right (List.map (renderIndicator metrics) model.levelData.trackedMetrics)
       in 
         G.flow G.down [ indicators

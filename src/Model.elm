@@ -44,7 +44,9 @@ type alias LevelData = {
     stopToNodeMapping : Dict String NodeId,
     activeStopIdx     : Maybe Int,
     changesRemaining  : Int,
-    timeLimit         : GameTime
+    timeLimit         : GameTime,
+    scalingFactor     : Float,
+    coordScalingFactor: Float
 }
 
 defaultLevelData : LevelData
@@ -56,7 +58,9 @@ defaultLevelData = {
     activeStopIdx     = Nothing,
     changesRemaining  = 0,
     timeLimit         = GameTime 10000,
-    trackedMetrics    = []
+    trackedMetrics    = [],
+    scalingFactor     = 1.0,
+    coordScalingFactor= 1.0
     }
 
 type alias Model = {
@@ -93,7 +97,9 @@ levelDataForScreen screen = case screen of
                                                 stops <- params.stops, 
                                                 stopToNodeMapping <- params.stopToNodeMapping, 
                                                 changesRemaining <- params.changeLimit,
-                                                trackedMetrics <- params.trackedMetrics }
+                                                trackedMetrics <- params.trackedMetrics,
+                                                scalingFactor <- params.scalingFactor,
+                                                coordScalingFactor <- params.coordScalingFactor }
         Nothing -> Debug.crash ("Level not found: " ++ toString n)
     _ -> defaultLevelData
 

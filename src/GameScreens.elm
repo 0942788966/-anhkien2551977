@@ -11,7 +11,15 @@ import Levels
 
 type GameScreenType = Message Int | Level Int
 
-type alias LevelParams = { level: Types.Input -> Types.Network, changeLimit: Int, stops: List String, stopToNodeMapping: Dict String NodeId, trackedMetrics: List Types.TrackedMetric }
+type alias LevelParams = { 
+  level: Types.Input -> Types.Network, 
+  changeLimit: Int, 
+  stops: List String, 
+  stopToNodeMapping: Dict String NodeId, 
+  trackedMetrics: List Types.TrackedMetric,
+  scalingFactor: Float,
+  coordScalingFactor: Float
+}
 
 levelParamsList : Array LevelParams
 levelParamsList = Array.fromList
@@ -22,6 +30,8 @@ levelParamsList = Array.fromList
         , stopToNodeMapping = Dict.fromList [("A", 1), ("B", 3), ("C", 5)] 
         , trackedMetrics = [{ displayName = "Bus Speed", metricName = "avgBusSpeed", isBadWhen = (\m -> m < 0.042), min = 0.04, max = 0.048 },
                             { displayName = "Avg Waiting Passengers", metricName = "avgWaiting", isBadWhen = (\m -> m > 15), min = 10, max = 20 }]
+        , scalingFactor = 0.9
+        , coordScalingFactor = 50
         },
         
         { level = Levels.lvl2
@@ -29,11 +39,16 @@ levelParamsList = Array.fromList
         , stops = ["A", "B", "C"] 
         , stopToNodeMapping = Dict.fromList [("A", 7), ("B", 3), ("C", 1)] 
         , trackedMetrics = []
+        , scalingFactor = 0.9
+        , coordScalingFactor = 50
         },
         { level = Levels.lvl3
         , changeLimit = 1
         , stops = ["A", "B", "C"]
         , stopToNodeMapping = Dict.fromList [("A", 7), ("B", 3), ("C", 1)]
+        , trackedMetrics = []
+        , scalingFactor = 0.9
+        , coordScalingFactor = 0.2
         }
     ]
 

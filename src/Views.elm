@@ -260,5 +260,5 @@ gameClock model =
 trafficGrid : Model -> G.Element
 trafficGrid model =
    let network = (\(Types.State network _) -> network) model.network
-   in RenderNetwork.renderNetwork network
+   in RenderNetwork.renderNetwork 0.9 network
 

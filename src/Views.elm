@@ -154,6 +154,10 @@ renderLevel levelNum address model =
             [Html.fromElement <| trafficGrid model]
     ]
 
+renderEndLevel : Int -> Html
+renderEndLevel levelNum =
+  Html.body []
+
 busStopsWidget : Address Action -> Model -> Html
 busStopsWidget address model =
     let

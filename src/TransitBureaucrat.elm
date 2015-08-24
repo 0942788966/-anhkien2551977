@@ -21,7 +21,7 @@ updateStopOrder : StopDirection -> Model ->  Model
 updateStopOrder sd oldModel =
     if oldModel.levelData.changesRemaining == 0
     then oldModel
-    else let 
+    else let
         oldLevelData = oldModel.levelData
         newLevelData =
             case sd of
@@ -33,7 +33,7 @@ updateStopOrder sd oldModel =
                     Nothing -> oldLevelData
                 StopDown -> case oldLevelData.activeStopIdx of
                     Just i -> { oldLevelData | stops <- moveIthMemberDown i oldLevelData.stops,
-                                               activeStopIdx <- Nothing, 
+                                               activeStopIdx <- Nothing,
                                                changesRemaining <- (oldLevelData.changesRemaining - 1)
                                }
                     Nothing -> oldLevelData
@@ -50,7 +50,7 @@ update action oldModel =
         ChangeStopOrder sd ->  updateStopOrder sd oldModel
         GoToScreen newScreen -> { oldModel | screen <- newScreen,
                                              levelData <- levelDataForScreen newScreen
-   
+
                                  }
         ToggleAdvancingTime -> { oldModel | timeAdvancing <- not oldModel.timeAdvancing }
         TickRealtime t ->
@@ -88,6 +88,26 @@ update action oldModel =
                                   levelData <- levelDataForScreen oldModel.screen
                      }
 
+        EndLevel ->
+          let level = case oldModel.screen of
+                        TitleScreen       -> 0
+                        ChooseLevelScreen -> 0
+                        LevelScreen i     -> i
+                        MessageScreen i   -> i
+                        EndLevelScreen i  -> i
+          in
+            if levelPassed oldModel
+            then { oldModel | realtimeMs <- 0,
+                              time <- GameTime 0,
+                              timeAdvancing <- False,
+                              counter <- 0,
+                              levelData <- levelDataForScreen oldModel.screen,
+                              screen <- EndLevelScreen level }
+            else { oldModel | realtimeMs <- 0,
+                              time <- GameTime 0,
+                              timeAdvancing <- False,
+                              counter <- 0,
+                              levelData <- levelDataForScreen oldModel.screen,}
 
   in (newModel, E.tick TickRealtime)
 
@@ -96,15 +116,16 @@ resetStateInLevelData levelData =
   let input = List.map (\(BusStop s) -> Dict.get s levelData.stopToNodeMapping |> getOrFail ("unknown bus stop " ++ s ++ " : " ++ toString levelData.stopToNodeMapping)) levelData.stops
       network = levelData.networkGenerator input
   in
-    { levelData | state <- Types.State network Dict.empty}
+    { levelData | state <- Types.State network Dict.empty }
 
 
 view : Address Action -> Model -> Html
 view address model = case model.screen of
-    TitleScreen ->  renderTitleScreen address
+    TitleScreen       ->  renderTitleScreen address
     ChooseLevelScreen -> renderChooseLevel address model
-    MessageScreen n -> renderMessageScreen n address
-    LevelScreen n -> renderLevel n address model
+    MessageScreen n   -> renderMessageScreen n address
+    LevelScreen n     -> renderLevel n address model
+    EndLevelScreen n  -> renderEndLevel n
 
 app = start { init = (initialModel, E.none), update = update, view = view, inputs = [] }
 

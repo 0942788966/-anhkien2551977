@@ -4,7 +4,7 @@ import Array as A
 import Effects
 import Time exposing (Time)
 import Debug
-import Dict
+import Dict exposing (Dict)
 import DraggableForm
 
 import Graph exposing (NodeId)
@@ -32,6 +32,7 @@ type StopDirection = StopUp | StopDown | MakeActiveStopIndex Int
 
 type alias LevelData = {
     stops: List BusStop,
+    stopToNodeMapping: Dict String NodeId,
     activeStopIdx: Maybe Int,
     changesRemaining: Int
 }
@@ -39,8 +40,9 @@ type alias LevelData = {
 defaultLevelData : LevelData
 defaultLevelData = {
     stops = [],
+    stopToNodeMapping = Dict.empty,
     activeStopIdx = Nothing,
-    changesRemaining = 3
+    changesRemaining = 0
     }
                 
 
@@ -76,7 +78,8 @@ levelDataForScreen screen = case screen of
     LevelScreen n -> case A.get n levelParamsList of
         Just levelParams ->
             let
-                stops = [BusStop "A", BusStop "B", BusStop "C", BusStop "D"]
+                stops = [BusStop "A", BusStop "B", BusStop "C"]
+                stopsMapping = Dict.fromList [("A", 1), ("B", 3), ("C", 5)]
                 changesRemaining = levelParams.changeLimit
             in  
                { defaultLevelData | stops <- stops, changesRemaining <- changesRemaining }

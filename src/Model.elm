@@ -1,5 +1,6 @@
 module Model where
 
+import Array as A
 import Effects
 import Time exposing (Time)
 import Debug
@@ -11,6 +12,7 @@ import Graph exposing (NodeId)
 import Types
 import Network
 import Levels
+import GameScreens exposing (gameScreens, LevelParams, levelParamsList)
 
 type ScreenState = TitleScreen | ChooseLevelScreen | LevelScreen Int | MessageScreen Int
 
@@ -34,7 +36,7 @@ type alias LevelData = {
 }
 
 defaultLevelData : LevelData
-defaultLevelData = { 
+defaultLevelData = {
     stops = [],
     activeStopIdx = Nothing,
     changesRemaining = 3
@@ -70,6 +72,13 @@ initialModel = {
 
 levelDataForScreen : ScreenState -> LevelData
 levelDataForScreen screen = case screen of
-    LevelScreen n -> { defaultLevelData | stops <- [BusStop "A", BusStop "B", BusStop "C", BusStop "D"] }
+    LevelScreen n -> case A.get n levelParamsList of
+        Just levelParams ->
+            let
+                stops = [BusStop "A", BusStop "B", BusStop "C", BusStop "D"]
+                changesRemaining = levelParams.changeLimit
+            in  
+               { defaultLevelData | stops <- stops, changesRemaining <- changesRemaining }
+        Nothing -> defaultLevelData
     _ -> defaultLevelData
 

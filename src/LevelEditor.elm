@@ -71,7 +71,11 @@ type alias EditorState = {
   }
 
 addNode : (Int, Int) -> EditorState -> EditorState
-addNode node state = { state | nodes <- Set.insert node state.nodes }
+addNode node state =
+  let (x, y) = unconvert node in
+  if toFloat x < width && toFloat y < height
+  then { state | nodes <- Set.insert node state.nodes }
+  else state
 
 deleteNode : (Int, Int) -> EditorState -> EditorState
 deleteNode node state = { state | nodes <- Set.remove node state.nodes }
@@ -133,7 +137,7 @@ dist (x1, y1) (x2, y2) = sqrt <| (x1 - x2)^2 + (y1 - y2)^2
 
 
 toNetwork : EditorState -> Network
-toNetwork state = 
+toNetwork state =
   let wrapPoint (x, y) = (toFloat x, toFloat y)
       nodes = Set.toList state.nodes |> List.map wrapPoint
       nodeMap = Dict.fromList (List.map2 (\ i s -> (s, i)) [1..List.length nodes] nodes)
@@ -152,9 +156,16 @@ toNetwork state =
   in
     Graph.fromNodesAndEdges points edges |> Debug.watch "net"
 
+width = 1500
+height = 900
+cellSize = 50
+
+convert (x, y) = (x - width // 2, -(y - height // 2))
+unconvert (x, y) = (x + width // 2, -y + height // 2)
+
 main =
-  let onGrid forms = (grid 50 1500 1000)::forms
-      convert (x, y) = (x - 1500 // 2, -(y - 900 // 2))
+  let onGrid forms = (grid cellSize width height)::forms
+      convert (x, y) = (x - width // 2, -(y - height // 2))
       points = Signal.map (snapTo 50 << convert) Mouse.position
       clicked = Signal.sampleOn Mouse.clicks points
       deletes = Signal.map deleteSelected <| Keyboard.isDown 46
@@ -169,6 +180,6 @@ main =
       shadows = Signal.map shadow points
 
       net = Signal.map (show << toNetwork) states
-      editor = Signal.map (GC.collage 1500 900 << onGrid << render) states
+      editor = Signal.map (GC.collage width height << onGrid << render) states
   in
     Signal.map2 (\ a b -> flow down [b, a]) net editor

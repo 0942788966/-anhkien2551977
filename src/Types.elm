@@ -22,7 +22,7 @@ type alias Point = {
 type PointKind = Intersection
                | BusStop { currentlyWaiting : Float, waitingDelta : Float }
                | StopSign { delay : Float, currentDelay : Float }
-               | CarSpawner { route : Route, interval : Float, nextIn : Float, startEdge : (NodeId, NodeId) }
+               | CarSpawner { route : CarRoute, interval : Float, nextIn : Float, startEdge : (NodeId, NodeId) }
 
 type alias Road = {
     length : Float,
@@ -38,9 +38,10 @@ type alias Agent = {
     lastEdge  : Maybe (NodeId, NodeId)
   }
 
-type AgentKind = Bus Route | Car Route
+type AgentKind = Bus BusRoute | Car CarRoute
 
-type alias Route = IntDict NodeId
+type alias CarRoute = Dict Int Int
+type alias BusRoute = Dict (Int, Int) Int
 
 
 isBus : Agent -> Bool

@@ -51,7 +51,7 @@ example =
 
       networkWithoutBuses = Graph.fromNodesAndEdges nodes edgesWithoutBuses
 
-      busKind = Bus (busRouteFromList [1, 5, 3] networkWithoutBuses)
+      busKind = Bus (busRouteFromList [1, 3, 5] networkWithoutBuses)
       bus = {kind = busKind, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.green, lastEdge = Nothing}
 
       edges = [
@@ -166,8 +166,6 @@ analyze net oldMetrics =
                            |> Dict.insert "currentlyWaiting" currentlyWaiting
                            |> Dict.insert "totalWaiting" (currentlyWaiting + (Dict.get "totalWaiting" oldMetrics |> Maybe.withDefault 0))
                            |> Dict.insert "avgBusDistanceTravelled" avgBusDistanceTravelled
-
-      route = findPath net (1, 5) |> Debug.watch "route"
   in
     metrics |> Dict.insert "avgCongestion" ((Dict.get "totalCongestion" metrics |> getOrFail "") / (Dict.get "ticks" metrics |> getOrFail ""))
             |> Dict.insert "avgWaiting" ((Dict.get "totalWaiting" metrics |> getOrFail "") / (Dict.get "ticks" metrics |> getOrFail ""))

@@ -1,5 +1,6 @@
 module Views where
 
+import DraggableForm
 import Html exposing (Html)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (style)
@@ -13,6 +14,7 @@ import Array
 import Debug
 import RenderNetwork
 
+import Types
 import EmailTexts exposing (emailTexts)
 import GameScreens exposing (..)
 import Model exposing (..)
@@ -141,7 +143,8 @@ renderLevel levelNum address model =
             controlPane [
                 gameButton address ResetTime "Reset",
                 gameButton address (GoToScreen TitleScreen) "Return to title",
-                gameButton address ToggleAdvancingTime "Toggle time"
+                gameButton address ToggleAdvancingTime "Toggle time",
+                busStopsWidget address model.levelData
                 ],
             gameClock model
         ],
@@ -150,6 +153,18 @@ renderLevel levelNum address model =
             --[Html.fromElement <| trafficGrid model]
             [Html.fromElement <| trafficGrid model]
     ]
+
+busStopsWidget : Address Action -> LevelData -> Html
+busStopsWidget address levelData =
+    let
+        stops = levelData.stops
+        stopNames = L.map (\(BusStop name) -> name) stops
+    in Html.div []
+        [
+            Html.p [] [Html.text "Stop order"],
+            Html.fromElement <| G.flow G.down
+                (L.map (\x -> G.leftAligned (T.fromString x)) stopNames)
+        ]
 
 controlPane : List Html -> Html
 controlPane contents =
@@ -218,5 +233,7 @@ gameClock model =
        [Html.fromElement <| G.flow G.right [clockCollage, timeDisplay model.time]]
 
 trafficGrid : Model -> G.Element
-trafficGrid model = RenderNetwork.render model.network
+trafficGrid model =
+   let network = (\(Types.State network _) -> network) model.network
+   in RenderNetwork.renderNetwork network
 

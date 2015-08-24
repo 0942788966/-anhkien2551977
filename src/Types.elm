@@ -43,6 +43,8 @@ type AgentKind = Bus BusRoute | Car CarRoute
 type alias CarRoute = Dict Int Int
 type alias BusRoute = Dict (Int, Int) Int
 
+type alias Input = List NodeId
+
 
 isBus : Agent -> Bool
 isBus agent =

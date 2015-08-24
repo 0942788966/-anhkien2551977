@@ -6,8 +6,11 @@ import Debug
 import Dict
 import DraggableForm
 
+import Graph exposing (NodeId)
+
 import Types
 import Network
+import Levels
 
 type ScreenState = TitleScreen | ChooseLevelScreen | LevelScreen Int | MessageScreen Int
 
@@ -56,7 +59,7 @@ initialModel = {
         levelData = defaultLevelData,
         time = GameTime 0,
         timeAdvancing = False,
-        network = Types.State Network.example Dict.empty,
+        network = Types.State (Levels.lvl1 [1, 5, 3]) Dict.empty,
         realtimeMs = 0,
         counter = 0,
         tickRate = 10

@@ -15,6 +15,7 @@ import Types
 import Views exposing (..)
 import Model exposing (..)
 import Helpers exposing (moveIthMemberUp, moveIthMemberDown)
+import Levels
 
 updateStopOrder : StopDirection -> Model ->  Model
 updateStopOrder sd oldModel =
@@ -67,7 +68,7 @@ update action oldModel =
                                   time <- GameTime 0,
                                   timeAdvancing <- False,
                                   counter <- 0,
-                                  network <- (Types.State Network.example Dict.empty)
+                                  network <- (Types.State (Levels.lvl1 [1, 5, 3]) Dict.empty)
                      }
 
 

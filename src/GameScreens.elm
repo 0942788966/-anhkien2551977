@@ -10,7 +10,7 @@ type alias LevelParams =
 levelParamsList : Array LevelParams
 levelParamsList = Array.fromList
     [
-        {changeLimit = 3}
+        {changeLimit = 1}
     ]
 
 gameScreens = [

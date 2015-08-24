@@ -31,7 +31,7 @@ example =
         node 4 (r3, 0) Intersection,
         node 5 (2*r3, 0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.1}),
         node 6 (3/2*r3, 3/2) Intersection,
-        node 7 (r3, 1) Intersection
+        node 7 (r3, 1) (StopSign {delay = 8, currentDelay = 0})
       ]
 
       edgesWithoutBuses = [
@@ -51,7 +51,7 @@ example =
 
       networkWithoutBuses = Graph.fromNodesAndEdges nodes edgesWithoutBuses
 
-      busKind = Bus (busRouteFromList [1, 3, 5] networkWithoutBuses)
+      busKind = Bus (busRouteFromList [1, 5, 3] networkWithoutBuses)
       bus = {kind = busKind, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.green, lastEdge = Nothing}
 
       edges = [

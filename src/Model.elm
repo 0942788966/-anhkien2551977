@@ -3,6 +3,7 @@ module Model where
 import Effects
 import Time exposing (Time)
 import Debug
+import Dict
 
 import Types
 import Network
@@ -31,7 +32,7 @@ type alias Model = {
                     levelData: LevelData,
                     time: GameTime,
                     timeAdvancing: Bool,
-                    network: Types.Network,
+                    network: Types.State,
                     realtimeMs: Float,
                     counter: Int,
                     tickRate : Int -- one game time tick every tickRate ms
@@ -44,7 +45,7 @@ initialModel = {
         levelData = { stops = [] },
         time = GameTime 0,
         timeAdvancing = False,
-        network = Network.example,
+        network = Types.State Network.example Dict.empty,
         realtimeMs = 0,
         counter = 0,
         tickRate = 10

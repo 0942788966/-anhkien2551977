@@ -8,8 +8,10 @@ import Graphics.Element as G
 import Effects as E
 import Task
 import Time
-import Network
+import Dict
 
+import Network
+import Types
 import Views exposing (..)
 import Model exposing (..)
 
@@ -29,21 +31,26 @@ update action oldModel =
             if readyForNewGameTick oldModel.counter
             then
                 let newTime = if oldModel.timeAdvancing then incrementTime oldModel.time else oldModel.time
-                    newNetwork = if oldModel.timeAdvancing then Network.update oldModel.network else oldModel.network
+
+                    newNetwork : Types.State
+                    newNetwork = if oldModel.timeAdvancing
+                                 then Network.update oldModel.network
+                                 else oldModel.network
+
                 in  { oldModel | time <- newTime,
                                  network <- newNetwork,
                                  counter <- 0
                     }
             else
                 { oldModel | realtimeMs <- Time.inMilliseconds t,
-                            counter <- oldModel.counter + (floor <| Time.inMilliseconds t - oldModel.realtimeMs)
+                             counter <- oldModel.counter + (floor <| Time.inMilliseconds t - oldModel.realtimeMs)
                 }
 
         ResetTime -> { oldModel | realtimeMs <- 0,
                                   time <- GameTime 0,
                                   timeAdvancing <- False,
                                   counter <- 0,
-                                  network <- Network.example
+                                  network <- (Types.State Network.example Dict.empty)
                      }
 
 

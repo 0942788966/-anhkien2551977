@@ -45,6 +45,14 @@ type alias BusRoute = Dict (Int, Int) Int
 
 type alias Input = List NodeId
 
+type alias TrackedMetric = {
+    displayName: String,
+    metricName : String,
+    isBadWhen  : Float -> Bool,
+    min        : Float,
+    max        : Float
+}
+
 
 isBus : Agent -> Bool
 isBus agent =

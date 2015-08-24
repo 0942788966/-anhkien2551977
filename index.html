@@ -1,10 +1,17 @@
-<html>
+<<html>
   <head>
     <title>Asshole Transit Bureaucrat 2015</title>
     <script type="text/javascript" src="elm.js"></script>
+    <script type="text/javascript" src="audio.js"></script>
     <base target="_blank">
   </head>
   <body>
+    <audio id="audio_widget" src="assets/traffic_nemesis.mp3" preload="auto">
+    </audio>
+    <a id='mute' style="cursor: hand">
+      <span id='mute_text'>Mute</span>
+    <img src="assets/mute-off.png" style="background-color: black"></img>
+    </a>
   </body>
   <script type="text/javascript">
     Elm.fullscreen(Elm.TransitBureaucrat);

@@ -8,11 +8,13 @@ import Graphics.Element as G
 import Graphics.Collage exposing (..)
 import Text as T
 import List as L
+import Dict
 import Color
 import Array
 import Debug
 import RenderNetwork
 
+import Helpers exposing (getOrFail)
 import Types
 import EmailTexts exposing (emailTexts)
 import GameScreens exposing (..)
@@ -254,7 +256,35 @@ gameClock model =
        Html.div [style styleAttrs]
        [Html.fromElement <| G.flow G.right [clockCollage, timeDisplay model.time]]
 
+renderIndicator : Types.Metrics -> Types.TrackedMetric -> G.Element
+renderIndicator metrics trackedMetric = 
+  case Dict.get trackedMetric.metricName metrics of
+    Just value -> 
+      let name = G.leftAligned <| T.fromString (" " ++ trackedMetric.displayName ++ " : ")
+          
+          color = if trackedMetric.isBadWhen value
+                  then Color.red
+                  else Color.green
+          width = 100
+          height = 20
+          pos = (value - trackedMetric.min) / (trackedMetric.max - trackedMetric.min) * width
+
+          indicatorFrame = rect width height |> outlined { defaultLine | color <- color }
+          indicatorBody = rect pos height |> filled color
+
+          indicator = collage width height [indicatorBody, indicatorFrame]
+      in G.flow G.right [G.spacer 10 10, name, indicator, G.spacer 15 15]
+    Nothing -> G.spacer 100 20
+
+
 trafficGrid : Model -> G.Element
 trafficGrid model =
-   RenderNetwork.render 0.9 model.levelData.state
+  case model.levelData.state of
+    Types.State network metrics -> 
+      let networkGrid = RenderNetwork.renderNetwork 0.9 network -- RenderNetwork.render 0.9 model.levelData.state
+          indicators = G.flow G.right (List.map (renderIndicator metrics) model.levelData.trackedMetrics)
+      in 
+        G.flow G.down [ indicators
+                      , networkGrid 
+                      ]
 

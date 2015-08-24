@@ -20,7 +20,7 @@ levelParamsList = Array.fromList
         , changeLimit = 1
         , stops = ["A", "B", "C"]
         , stopToNodeMapping = Dict.fromList [("A", 1), ("B", 3), ("C", 5)] 
-        , trackedMetrics = [{ displayName = "Bus Speed", metricName = "avgBusSpeed", isBadWhen = (\m -> m < 0.42), min = 0.4, max = 0.45 },
+        , trackedMetrics = [{ displayName = "Bus Speed", metricName = "avgBusSpeed", isBadWhen = (\m -> m < 0.042), min = 0.04, max = 0.048 },
                             { displayName = "Avg Waiting Passengers", metricName = "avgWaiting", isBadWhen = (\m -> m > 15), min = 10, max = 20 }]
         },
         

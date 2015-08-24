@@ -26,13 +26,13 @@ example =
       edge from to distance agents = Edge from to (Road distance agents)
 
       nodes = [
-        node 1 (0.0, 0.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.2}),
+        node 1 (0.0, 0.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.1}),
         node 2 (1.0, 0.0) (CarSpawner {route = carRouteUp, interval = 20, nextIn = 0, startEdge = (2, 4)}),
         node 3 (0.0, 1.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.2}),
         node 4 (1.0, 1.0) (StopSign {delay = 8, currentDelay = 0.0}),
         node 5 (0.0, 2.0) (CarSpawner {route = carRouteDown, interval = 20, nextIn = 0, startEdge = (5, 3)}),
         node 6 (1.0, 2.0) Intersection,
-        node 7 (2.0, 2.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.2})
+        node 7 (2.0, 2.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.1})
       ]
       
       edgesWithoutBuses = [
@@ -61,7 +61,7 @@ example =
        edge 4 6 1.0 [],
        edge 5 3 1.0 [],
        edge 6 5 1.0 [],
-       edge 7 6 1.0 []
+       edge 7 6 1.0 [bus]
       ]
   in
     Graph.fromNodesAndEdges nodes edges
@@ -150,6 +150,7 @@ analyze net oldMetrics =
       numBuses = Graph.edges net |> List.map (\edge -> List.filter isBus edge.label.agents |> List.length  |> toFloat) |> List.sum
       numRoads = Graph.edges net |> List.length |> toFloat
       totalBusDistanceTravelled = Graph.edges net |> List.map (\edge -> List.map busDistanceTravelled edge.label.agents |> List.sum) |> List.sum
+      currentlyWaiting = Graph.nodes net |> List.map (\node -> waitingPassengersAt node.label |> toFloat) |> List.sum
 
       currentCongestion = numAgents / numRoads
       avgBusDistanceTravelled = totalBusDistanceTravelled / numBuses
@@ -157,9 +158,12 @@ analyze net oldMetrics =
       metrics = oldMetrics |> Dict.insert "ticks" (1 + (Dict.get "ticks" oldMetrics |> Maybe.withDefault 0))
                            |> Dict.insert "currentCongestion" currentCongestion
                            |> Dict.insert "totalCongestion" (currentCongestion + (Dict.get "totalCongestion" oldMetrics |> Maybe.withDefault 0))
+                           |> Dict.insert "currentlyWaiting" currentlyWaiting
+                           |> Dict.insert "totalWaiting" (currentlyWaiting + (Dict.get "totalWaiting" oldMetrics |> Maybe.withDefault 0))
                            |> Dict.insert "avgBusDistanceTravelled" avgBusDistanceTravelled
   in
     metrics |> Dict.insert "avgCongestion" ((Dict.get "totalCongestion" metrics |> getOrFail "") / (Dict.get "ticks" metrics |> getOrFail ""))
+            |> Dict.insert "avgWaiting" ((Dict.get "totalWaiting" metrics |> getOrFail "") / (Dict.get "ticks" metrics |> getOrFail ""))
             |> Dict.insert "avgBusSpeed" ((Dict.get "avgBusDistanceTravelled" metrics |> getOrFail "") / (Dict.get "ticks" metrics |> getOrFail "") * fps)
             |> Debug.watch "metrics"
 

@@ -1,6 +1,7 @@
 module RenderNetwork where
 
 import Color exposing (Color)
+import Dict
 import Graphics.Element as Element exposing (Element, show, flow, down)
 import Graphics.Collage as GC exposing (Form)
 import Text
@@ -58,7 +59,7 @@ renderAgent (coords, agent, angle) =
 renderPoint : Point -> Form
 renderPoint point =
   case point.kind of 
-    BusStop props  -> let crowdSize = max 2 <| min 10 (props.currentlyWaiting / 5)
+    BusStop props  -> let crowdSize = max 2 <| min 20 (sqrt props.currentlyWaiting * 2)
                           crowdCircle = GC.filled Color.lightBlue <| GC.circle crowdSize
                           busSign = GC.group [ GC.traced GC.defaultLine <| GC.segment (0,0) (-20,50)
                                              , GC.move (-20,50) <| GC.filled Color.yellow <| GC.circle 15
@@ -90,6 +91,8 @@ renderNetwork net =
 
 render : State -> Element
 render (State network metrics) =
-  flow down [ show metrics 
+  flow down [ show ("Avg bus speed = " ++ toString (Dict.get "avgBusSpeed" metrics |> Maybe.withDefault 0)) 
+            , show ("Avg congestion = " ++ toString (Dict.get "avgCongestion" metrics |> Maybe.withDefault 0)) 
+            , show ("Avg waiting passengers = " ++ toString (Dict.get "avgWaiting" metrics |> Maybe.withDefault 0)) 
             , renderNetwork network
             ]

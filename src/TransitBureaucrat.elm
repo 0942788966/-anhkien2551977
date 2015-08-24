@@ -47,7 +47,13 @@ update action oldModel =
 
     newModel : Model
     newModel = case action of
-        ChangeStopOrder sd ->  updateStopOrder sd oldModel
+        ChangeStopOrder sd -> let updatedModel = updateStopOrder sd oldModel
+                              in { updatedModel | realtimeMs <- 0,
+                                                  time <- GameTime 0,
+                                                  timeAdvancing <- False,
+                                                  counter <- 0,
+                                                  levelData <- resetStateInLevelData updatedModel.levelData}
+
         GoToScreen newScreen -> { oldModel | screen <- newScreen,
                                              levelData <- levelDataForScreen newScreen
    

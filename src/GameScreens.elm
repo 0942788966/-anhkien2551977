@@ -50,9 +50,9 @@ levelParamsList = Array.fromList
         , stops = ["A", "B", "C"]
         , stopToNodeMapping = Dict.fromList [("A", 7), ("B", 3), ("C", 1)]
         , trackedMetrics = []
-        , scalingFactor = 0.9
-        , coordScalingFactor = 0.2
-        , globalTransform = (0, 100.0)
+        , scalingFactor = 0.8
+        , coordScalingFactor = 0.3
+        , globalTransform = (0, 120.0)
         }
     ]
 

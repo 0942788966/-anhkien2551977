@@ -19,40 +19,52 @@ fps = 30
 
 example : Network
 example =
-  let bus = Bus <| busRouteFromList [1, 2, 7, 6, 5, 3]
-      bus2 = Bus <| busRouteFromList [6, 5, 3, 4]
-      carRouteUp = carRouteFromList [2, 4, 6]
+  let carRouteUp = carRouteFromList [2, 4, 6]
       carRouteDown = carRouteFromList [5, 3, 1]
 
       node id (x,y) kind = Node id (Point (Coords x y) kind)
+      edge from to distance agents = Edge from to (Road distance agents)
 
       nodes = [
-        node 1 (0.0, 0.0) Intersection,
-        node 2 (1.0, 0.0) (CarSpawner {route = carRouteUp, interval = 10, nextIn = 0, startEdge = (2, 4)}),
-        node 3 (0.0, 1.0) Intersection,
-        node 4 (1.0, 1.0) (StopSign {delay = 5, currentDelay = 0.0}),
-        node 5 (0.0, 2.0) (CarSpawner {route = carRouteDown, interval = 10, nextIn = 0, startEdge = (5, 3)}),
+        node 1 (0.0, 0.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.2}),
+        node 2 (1.0, 0.0) (CarSpawner {route = carRouteUp, interval = 20, nextIn = 0, startEdge = (2, 4)}),
+        node 3 (0.0, 1.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.2}),
+        node 4 (1.0, 1.0) (StopSign {delay = 8, currentDelay = 0.0}),
+        node 5 (0.0, 2.0) (CarSpawner {route = carRouteDown, interval = 20, nextIn = 0, startEdge = (5, 3)}),
         node 6 (1.0, 2.0) Intersection,
-        node 7 (2.0, 2.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.5})
+        node 7 (2.0, 2.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.2})
       ]
       
-      edge from to distance agents = Edge from to (Road distance agents)
-      
-      edges = [
-       edge 1 2 1.0 [{kind = bus, travelled = 0.0, totalDist = 0.0, speed = 0.04, color = Color.green, lastEdge = Nothing}],
+      edgesWithoutBuses = [
+       edge 1 2 1.0 [],
        edge 2 4 1.0 [],
        edge 2 7 (dist 1 2) [],
        edge 3 1 1.0 [],
-       edge 3 4 1.0 [],
-       edge 4 6 1.0 [{kind = bus2, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}, 
-                     {kind = bus2, travelled = 0.15, totalDist = 0.0, speed = 0.05, color = Color.blue, lastEdge = Nothing}],
-       edge 5 3 1.0 [{kind = bus2, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.red, lastEdge = Nothing}],
-       edge 6 5 1.0 [{kind = bus, travelled = 0.0, totalDist = 0.0, speed = 0.08, color = Color.orange, lastEdge = Nothing}],
-       edge 7 6 1.0 [{kind = bus, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.purple, lastEdge = Nothing}, 
-                     {kind = bus, travelled = 0.15, totalDist = 0.0, speed = 0.05, color = Color.purple, lastEdge = Nothing}]
+       edge 4 3 1.0 [],
+       edge 4 6 1.0 [],
+       edge 5 3 1.0 [],
+       edge 6 5 1.0 [],
+       edge 7 6 1.0 []
+      ]
+
+      networkWithoutBuses = Graph.fromNodesAndEdges nodes edgesWithoutBuses
+
+      busKind = Bus (busRouteFromList [7, 3, 1] networkWithoutBuses)
+      bus = {kind = busKind, travelled = 0.0, totalDist = 0.0, speed = 0.04, color = Color.green, lastEdge = Nothing}
+
+      edges = [
+       edge 1 2 1.0 [bus],
+       edge 2 4 1.0 [],
+       edge 2 7 (dist 1 2) [],
+       edge 3 1 1.0 [],
+       edge 4 3 1.0 [],
+       edge 4 6 1.0 [],
+       edge 5 3 1.0 [],
+       edge 6 5 1.0 [],
+       edge 7 6 1.0 []
       ]
   in
-  Graph.fromNodesAndEdges nodes edges
+    Graph.fromNodesAndEdges nodes edges
 
 pickUpSpeed : Float
 pickUpSpeed = 1.0

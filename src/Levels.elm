@@ -78,7 +78,7 @@ lvl2 busRoute =
         node 6 (1.0, 2.0) Intersection,
         node 7 (2.0, 2.0) (BusStop {label = "A", currentlyWaiting = 0.0, waitingDelta = 0.1})
       ]
-      
+
       edgesWithoutBuses = [
        edge 1 2 1.0 [],
        edge 2 4 1.0 [],
@@ -109,3 +109,76 @@ lvl2 busRoute =
       ]
   in
     Graph.fromNodesAndEdges nodes edges
+
+lvl3 : Input -> Network
+lvl3 input =
+  let nodes =
+        [ { id = 1, label =  { coords = { x = -350, y = -300 }, kind = Intersection } }
+        , { id = 2, label =  { coords = { x = -350, y = -200 }, kind = Intersection } }
+        , { id = 3, label =  { coords = { x = -350, y = 0    }, kind = Intersection } }
+        , { id = 4, label =  { coords = { x = -350, y = 250  }, kind = Intersection } }
+        , { id = 5, label =  { coords = { x = -250, y = -300 }, kind = Intersection } }
+        , { id = 6, label =  { coords = { x = -250, y = -200 }, kind = Intersection } }
+        , { id = 7, label =  { coords = { x = -250, y = 100  }, kind = Intersection } }
+        , { id = 8, label =  { coords = { x = -150, y = -200 }, kind = Intersection } }
+        , { id = 9, label =  { coords = { x = -100, y = -400 }, kind = Intersection } }
+        , { id = 10, label = { coords = { x = -100, y = -100 }, kind = Intersection } }
+        , { id = 11, label = { coords = { x = -100, y = 0    }, kind = Intersection } }
+        , { id = 12, label = { coords = { x = -100, y = 100  }, kind = Intersection } }
+        , { id = 13, label = { coords = { x = 0,    y = -100 }, kind = Intersection } }
+        , { id = 14, label = { coords = { x = 0,    y = 0    }, kind = Intersection } }
+        , { id = 15, label = { coords = { x = 50,   y = -350 }, kind = Intersection } }
+        , { id = 16, label = { coords = { x = 50,   y = -200 }, kind = Intersection } }
+        , { id = 17, label = { coords = { x = 100,  y = -300 }, kind = Intersection } }
+        , { id = 18, label = { coords = { x = 100,  y = -100 }, kind = Intersection } }
+        , { id = 19, label = { coords = { x = 100,  y = 0    }, kind = Intersection } }
+        , { id = 20, label = { coords = { x = 150,  y = -200 }, kind = Intersection } }
+        , { id = 21, label = { coords = { x = 200,  y = -100 }, kind = Intersection } }
+        , { id = 22, label = { coords = { x = 200,  y = 0    }, kind = Intersection } }
+        , { id = 23, label = { coords = { x = 200,  y = 100  }, kind = Intersection } }
+        , { id = 24, label = { coords = { x = 300,  y = -100 }, kind = Intersection } }
+        , { id = 25, label = { coords = { x = 300,  y = 0    }, kind = Intersection } }
+        , { id = 26, label = { coords = { x = 300,  y = 100  }, kind = Intersection } }
+        ]
+      edges =
+        [ { from = 26, label = { agents = [], length = 100                }, to = 25 }
+        , { from = 25, label = { agents = [], length = 100                }, to = 24 }
+        , { from = 24, label = { agents = [], length = 100                }, to = 21 }
+        , { from = 23, label = { agents = [], length = 100                }, to = 26 }
+        , { from = 22, label = { agents = [], length = 100                }, to = 25 }
+        , { from = 21, label = { agents = [], length = 100                }, to = 18 }
+        , { from = 20, label = { agents = [], length = 180.27756377319946 }, to = 24 }
+        , { from = 19, label = { agents = [], length = 141.4213562373095  }, to = 23 }
+        , { from = 19, label = { agents = [], length = 100                }, to = 22 }
+        , { from = 18, label = { agents = [], length = 100                }, to = 13 }
+        , { from = 17, label = { agents = [], length = 111.80339887498948 }, to = 20 }
+        , { from = 17, label = { agents = [], length = 111.80339887498948 }, to = 16 }
+        , { from = 16, label = { agents = [], length = 100                }, to = 20 }
+        , { from = 16, label = { agents = [], length = 180.27756377319946 }, to = 10 }
+        , { from = 16, label = { agents = [], length = 200                }, to = 8  }
+        , { from = 15, label = { agents = [], length = 70.71067811865476  }, to = 17 }
+        , { from = 14, label = { agents = [], length = 100                }, to = 19 }
+        , { from = 13, label = { agents = [], length = 100                }, to = 10 }
+        , { from = 12, label = { agents = [], length = 150                }, to = 7  }
+        , { from = 11, label = { agents = [], length = 100                }, to = 14 }
+        , { from = 11, label = { agents = [], length = 100                }, to = 12 }
+        , { from = 11, label = { agents = [], length = 180.27756377319946 }, to = 7  }
+        , { from = 11, label = { agents = [], length = 250                }, to = 3  }
+        , { from = 10, label = { agents = [], length = 100                }, to = 11 }
+        , { from = 9, label =  { agents = [], length = 158.11388300841898 }, to = 15 }
+        , { from = 8, label =  { agents = [], length = 250                }, to = 15 }
+        , { from = 8, label =  { agents = [], length = 111.80339887498948 }, to = 10 }
+        , { from = 8, label =  { agents = [], length = 206.15528128088303 }, to = 9  }
+        , { from = 7, label =  { agents = [], length = 180.27756377319946 }, to = 4  }
+        , { from = 6, label =  { agents = [], length = 100                }, to = 8  }
+        , { from = 6, label =  { agents = [], length = 100                }, to = 5  }
+        , { from = 5, label =  { agents = [], length = 141.4213562373095  }, to = 8  }
+        , { from = 4, label =  { agents = [], length = 250                }, to = 3  }
+        , { from = 3, label =  { agents = [], length = 269.2582403567252  }, to = 10 }
+        , { from = 3, label =  { agents = [], length = 282.842712474619   }, to = 8  }
+        , { from = 3, label =  { agents = [], length = 200                }, to = 2  }
+        , { from = 2, label =  { agents = [], length = 100                }, to = 6  }
+        , { from = 2, label =  { agents = [], length = 100                }, to = 1  }
+        , { from = 1, label =  { agents = [], length = 100                }, to = 5  }
+        ]
+  in Graph.fromNodesAndEdges nodes edges

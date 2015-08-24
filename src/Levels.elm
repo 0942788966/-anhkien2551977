@@ -41,7 +41,7 @@ lvl1 busRoute =
 
       networkWithoutBuses = Graph.fromNodesAndEdges nodes edgesWithoutBuses
 
-      busKind = Bus (busRouteFromList [1, 5, 3] networkWithoutBuses)
+      busKind = Bus (busRouteFromList busRoute networkWithoutBuses)
       bus = {kind = busKind, travelled = 0.0, totalDist = 0.0, speed = 0.05, color = Color.green, lastEdge = Nothing}
 
       edges = [
@@ -60,4 +60,3 @@ lvl1 busRoute =
       ]
   in
     Graph.fromNodesAndEdges nodes edges
-    

@@ -14,7 +14,7 @@ import Network
 import Types
 import Views exposing (..)
 import Model exposing (..)
-import Helpers exposing (moveIthMemberUp, moveIthMemberDown)
+import Helpers exposing (getOrFail, moveIthMemberUp, moveIthMemberDown)
 import Levels
 
 updateStopOrder : StopDirection -> Model ->  Model
@@ -58,13 +58,16 @@ update action oldModel =
             then
                 let newTime = if oldModel.timeAdvancing then incrementTime oldModel.time else oldModel.time
 
-                    newNetwork : Types.State
-                    newNetwork = if oldModel.timeAdvancing
-                                 then Network.update oldModel.network
-                                 else oldModel.network
+                    oldLevelData = oldModel.levelData
+
+                    newState = if oldModel.timeAdvancing
+                               then Network.update oldLevelData.state
+                               else oldLevelData.state
+
+                    newLevelData = { oldLevelData | state <- newState }
 
                 in  { oldModel | time <- newTime,
-                                 network <- newNetwork,
+                                 levelData <- newLevelData,
                                  counter <- 0
                     }
             else
@@ -75,19 +78,25 @@ update action oldModel =
                                   time <- GameTime 0,
                                   timeAdvancing <- False,
                                   counter <- 0,
-                                  network <- (Types.State (Levels.lvl1 [1, 5, 3]) Dict.empty)
+                                  levelData <- resetStateInLevelData oldModel.levelData
                      }
 
         ResetState -> { oldModel | realtimeMs <- 0,
                                   time <- GameTime 0,
                                   timeAdvancing <- False,
                                   counter <- 0,
-                                  network <- (Types.State (Levels.lvl1 [1, 5, 3]) Dict.empty),
                                   levelData <- levelDataForScreen oldModel.screen
                      }
 
 
   in (newModel, E.tick TickRealtime)
+
+resetStateInLevelData : LevelData -> LevelData
+resetStateInLevelData levelData =
+  let input = List.map (\(BusStop s) -> Dict.get s levelData.stopToNodeMapping |> getOrFail ("unknown bus stop " ++ s ++ " : " ++ toString levelData.stopToNodeMapping)) levelData.stops
+      network = levelData.networkGenerator input
+  in
+    { levelData | state <- Types.State network Dict.empty}
 
 
 view : Address Action -> Model -> Html

@@ -31,6 +31,8 @@ type Action = GoToScreen ScreenState
 type StopDirection = StopUp | StopDown | MakeActiveStopIndex Int
 
 type alias LevelData = {
+    state: Types.State,
+    networkGenerator: Types.Input -> Types.Network,
     stops: List BusStop,
     stopToNodeMapping: Dict String NodeId,
     activeStopIdx: Maybe Int,
@@ -39,37 +41,37 @@ type alias LevelData = {
 
 defaultLevelData : LevelData
 defaultLevelData = {
+    state = Types.State (Levels.lvl1 [1, 3, 5]) Dict.empty,
+    networkGenerator = Levels.lvl1,
     stops = [],
     stopToNodeMapping = Dict.empty,
     activeStopIdx = Nothing,
     changesRemaining = 0
     }
-                
+
 
 type BusStop = BusStop String
 
 type alias Model = {
-                    screen: ScreenState,
-                    levelData: LevelData,
-                    time: GameTime,
-                    timeAdvancing: Bool,
-                    network: Types.State,
-                    realtimeMs: Float,
-                    counter: Int,
-                    tickRate : Int -- one game time tick every tickRate ms
-                   }
+    screen: ScreenState,
+    levelData: LevelData,
+    time: GameTime,
+    timeAdvancing: Bool,
+    realtimeMs: Float,
+    counter: Int,
+    tickRate : Int -- one game time tick every tickRate ms
+}
 
 
 initialModel: Model
 initialModel = {
-        screen = TitleScreen,
-        levelData = defaultLevelData,
-        time = GameTime 0,
-        timeAdvancing = False,
-        network = Types.State (Levels.lvl1 [1, 5, 3]) Dict.empty,
-        realtimeMs = 0,
-        counter = 0,
-        tickRate = 10
+    screen = TitleScreen,
+    levelData = defaultLevelData,
+    time = GameTime 0,
+    timeAdvancing = False,
+    realtimeMs = 0,
+    counter = 0,
+    tickRate = 10
     }
 
 
@@ -82,7 +84,7 @@ levelDataForScreen screen = case screen of
                 stopsMapping = Dict.fromList [("A", 1), ("B", 3), ("C", 5)]
                 changesRemaining = levelParams.changeLimit
             in  
-               { defaultLevelData | stops <- stops, changesRemaining <- changesRemaining }
+               { defaultLevelData | stops <- stops, stopToNodeMapping <- stopsMapping, changesRemaining <- changesRemaining }
         Nothing -> defaultLevelData
     _ -> defaultLevelData
 

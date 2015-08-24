@@ -43,7 +43,7 @@ updateContext ctx =
                            else Nothing
             spawnedAgents = case ctx.node.label.kind of
                               CarSpawner props -> if props.nextIn < 1 && props.startEdge == edgeIds
-                                                  then [{kind = Car props.route, speed = 0.05, travelled = 0.0, totalDist = 0.0, color = Color.gray, lastEdge = Nothing}]
+                                                  then [{kind = Car props.route, speed = props.speed, travelled = 0.0, totalDist = 0.0, color = Color.gray, lastEdge = Nothing}]
                                                   else []
                               _                -> []
         in 

@@ -22,7 +22,7 @@ type alias Point = {
 type PointKind = Intersection
                | BusStop { label : String, currentlyWaiting : Float, waitingDelta : Float }
                | StopSign { delay : Float, currentDelay : Float }
-               | CarSpawner { route : CarRoute, interval : Float, nextIn : Float, startEdge : (NodeId, NodeId) }
+               | CarSpawner { route : CarRoute, speed: Float, interval : Float, nextIn : Float, startEdge : (NodeId, NodeId) }
 
 type alias Road = {
     length : Float,

@@ -87,11 +87,13 @@ renderNetwork scale coordsScale globalTransform net =
     points = Graph.nodes net |> List.map .label
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
 
+    pointLabels = List.map (\n -> GC.move (loc coordsScale n.label.coords) <| GC.text <| Text.color Color.white <| Text.fromString <| toString n.id) (Graph.nodes net)
+
     roads = List.map (renderRoad coordsScale) edgeNodePairs
     busStops = List.map (renderPoint coordsScale) points
     agents = List.map (renderAgent coordsScale) (agentPositions net)
         
-    mapGroup = GC.move globalTransform (GC.group <| roads ++ busStops ++ agents)
+    mapGroup = GC.move globalTransform (GC.group <| roads ++ busStops ++ agents ++ pointLabels)
   in
     GC.collage 1000 800 <| [GC.scale scale mapGroup]
 

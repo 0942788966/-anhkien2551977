@@ -47,8 +47,8 @@ levelParamsList = Array.fromList
         },
         { level = Levels.lvl3
         , changeLimit = 1
-        , stops = ["A", "B", "C"]
-        , stopToNodeMapping = Dict.fromList [("A", 7), ("B", 3), ("C", 1)]
+        , stops = ["A", "B", "C", "D"]
+        , stopToNodeMapping = Dict.fromList [("A", 8), ("B", 16), ("C", 25), ("D", 18)]
         , trackedMetrics = []
         , scalingFactor = 0.8
         , coordScalingFactor = 0.3

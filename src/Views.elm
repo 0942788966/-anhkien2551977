@@ -187,8 +187,8 @@ busStopsWidget address model =
             Html.p [] [Html.text "Change bus stop order"],
             Html.p [] [Html.text <| "Additional changes: " ++ (toString model.levelData.changesRemaining)],
             Html.div [style [("border", "1px solid black")]] stopButtons,
-            Html.button [onClick address <| ChangeStopOrder StopUp] [Html.text "^"],
-            Html.button [onClick address <| ChangeStopOrder StopDown] [Html.text "v"]
+            Html.button [onClick address <| ChangeStopOrder StopUp] [Html.text "<"],
+            Html.button [onClick address <| ChangeStopOrder StopDown] [Html.text ">"]
         ]
 
 controlPane : List Html -> Html

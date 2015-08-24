@@ -15,11 +15,11 @@ lvl1 busRoute =
       r3 = sqrt 3
 
       nodes = [
-        node 1 (r3, 3) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.1}),
+        node 1 (r3, 3) (BusStop {label = "A", currentlyWaiting = 0.0, waitingDelta = 0.1}),
         node 2 (r3/2, 3/2) Intersection,
-        node 3 (0, 0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.1}),
+        node 3 (0, 0) (BusStop {label = "B", currentlyWaiting = 0.0, waitingDelta = 0.1}),
         node 4 (r3, 0) Intersection,
-        node 5 (2*r3, 0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.1}),
+        node 5 (2*r3, 0) (BusStop {label = "C", currentlyWaiting = 0.0, waitingDelta = 0.1}),
         node 6 (3/2*r3, 3/2) Intersection,
         node 7 (r3, 1) (StopSign {delay = 8, currentDelay = 0})
       ]

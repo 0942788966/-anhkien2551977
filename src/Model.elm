@@ -46,7 +46,8 @@ type alias LevelData = {
     changesRemaining  : Int,
     timeLimit         : GameTime,
     scalingFactor     : Float,
-    coordScalingFactor: Float
+    coordScalingFactor: Float,
+    globalTransform   : (Float, Float)
 }
 
 defaultLevelData : LevelData
@@ -60,7 +61,8 @@ defaultLevelData = {
     timeLimit         = GameTime 10000,
     trackedMetrics    = [],
     scalingFactor     = 1.0,
-    coordScalingFactor= 1.0
+    coordScalingFactor= 1.0,
+    globalTransform   = (0, 0)
     }
 
 type alias Model = {
@@ -99,7 +101,8 @@ levelDataForScreen screen = case screen of
                                                 changesRemaining <- params.changeLimit,
                                                 trackedMetrics <- params.trackedMetrics,
                                                 scalingFactor <- params.scalingFactor,
-                                                coordScalingFactor <- params.coordScalingFactor }
+                                                coordScalingFactor <- params.coordScalingFactor,
+                                                globalTransform <- params.globalTransform }
         Nothing -> Debug.crash ("Level not found: " ++ toString n)
     _ -> defaultLevelData
 

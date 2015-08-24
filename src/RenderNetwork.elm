@@ -81,8 +81,8 @@ renderRoad coordsScale (n1, n2) =
       divider = GC.traced medianStyle segment
   in (GC.group [mainRoad, divider])
 
-renderNetwork : Float -> Float -> Network -> Element
-renderNetwork scale coordsScale net =
+renderNetwork : Float -> Float -> (Float, Float) -> Network -> Element
+renderNetwork scale coordsScale globalTransform net =
   let
     points = Graph.nodes net |> List.map .label
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
@@ -91,15 +91,14 @@ renderNetwork scale coordsScale net =
     busStops = List.map (renderPoint coordsScale) points
     agents = List.map (renderAgent coordsScale) (agentPositions net)
         
-    globalTransform = (-200.0, -100.0)
     mapGroup = GC.move globalTransform (GC.group <| roads ++ busStops ++ agents)
   in
     GC.collage 1000 800 <| [GC.scale scale mapGroup]
 
-render : Float -> Float -> State -> Element
-render scale coordsScale (State network metrics) =
+render : Float -> Float -> (Float, Float) -> State -> Element
+render scale coordsScale globalTransform (State network metrics) =
   flow down [ show ("Avg bus speed = " ++ toString (Dict.get "avgBusSpeed" metrics |> Maybe.withDefault 0)) 
             , show ("Avg congestion = " ++ toString (Dict.get "avgCongestion" metrics |> Maybe.withDefault 0)) 
             , show ("Avg waiting passengers = " ++ toString (Dict.get "avgWaiting" metrics |> Maybe.withDefault 0)) 
-            , renderNetwork scale coordsScale network
+            , renderNetwork scale coordsScale globalTransform network
             ]

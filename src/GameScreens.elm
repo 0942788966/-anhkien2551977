@@ -18,7 +18,8 @@ type alias LevelParams = {
   stopToNodeMapping: Dict String NodeId, 
   trackedMetrics: List Types.TrackedMetric,
   scalingFactor: Float,
-  coordScalingFactor: Float
+  coordScalingFactor: Float,
+  globalTransform: (Float, Float)
 }
 
 levelParamsList : Array LevelParams
@@ -32,6 +33,7 @@ levelParamsList = Array.fromList
                             { displayName = "Avg Waiting Passengers", metricName = "avgWaiting", isBadWhen = (\m -> m > 15), min = 10, max = 20 }]
         , scalingFactor = 0.9
         , coordScalingFactor = 50
+        , globalTransform = (-200.0, -100.0)
         },
         
         { level = Levels.lvl2
@@ -41,6 +43,7 @@ levelParamsList = Array.fromList
         , trackedMetrics = []
         , scalingFactor = 0.9
         , coordScalingFactor = 50
+        , globalTransform = (-200.0, -100.0)
         },
         { level = Levels.lvl3
         , changeLimit = 1
@@ -49,6 +52,7 @@ levelParamsList = Array.fromList
         , trackedMetrics = []
         , scalingFactor = 0.9
         , coordScalingFactor = 0.2
+        , globalTransform = (0, 100.0)
         }
     ]
 

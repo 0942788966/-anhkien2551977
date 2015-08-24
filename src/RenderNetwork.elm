@@ -72,8 +72,8 @@ renderPoint point =
                                ] |> GC.move (addCoords (-size*5,size*5) (loc point.coords))
     _              -> GC.toForm Element.empty
 
-renderNetwork : Network -> Element
-renderNetwork net =
+renderNetwork : Float -> Network -> Element
+renderNetwork scale net =
   let
     points = Graph.nodes net |> List.map .label
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
@@ -87,12 +87,12 @@ renderNetwork net =
     globalTransform = (-200.0, -100.0)
     mapGroup = GC.move globalTransform (GC.group <| roads ++ lines ++ busStops ++ agents)
   in
-    GC.collage 1000 800 <| [mapGroup]
+    GC.collage 1000 800 <| [GC.scale scale mapGroup]
 
-render : State -> Element
-render (State network metrics) =
+render : Float -> State -> Element
+render scale (State network metrics) =
   flow down [ show ("Avg bus speed = " ++ toString (Dict.get "avgBusSpeed" metrics |> Maybe.withDefault 0)) 
             , show ("Avg congestion = " ++ toString (Dict.get "avgCongestion" metrics |> Maybe.withDefault 0)) 
             , show ("Avg waiting passengers = " ++ toString (Dict.get "avgWaiting" metrics |> Maybe.withDefault 0)) 
-            , renderNetwork network
+            , renderNetwork scale network
             ]

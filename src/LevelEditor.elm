@@ -1,6 +1,7 @@
 module LevelEditor where
 
 import Color
+import Dict
 import Debug
 import Graphics.Collage as GC exposing (Form)
 import Keyboard
@@ -8,7 +9,10 @@ import Mouse
 import Set exposing (Set)
 import Signal
 
-import RenderNetwork as Render
+import Graph exposing (Graph)
+
+import Types exposing (Network)
+import Helpers
 
 cellStyle : GC.LineStyle
 cellStyle = let def = GC.defaultLine in
@@ -122,6 +126,27 @@ render state =
       edges = List.map edgeSegment <| Set.toList state.edges
   in
     placeholders ++ selectedCircles ++ edges
+
+dist : (Float, Float) -> (Float, Float) -> Float
+dist (x1, y1) (x2, y2) = sqrt <| (x1 - x2)^2 + (y1 - y2)^2
+
+
+toNetwork state = 
+  let nodes = Set.toList state.nodes
+      nodeMap = Dict.fromList (List.map2 (\ i s -> (s, i)) [1..List.length nodes] nodes)
+
+      makePoint (x, y) = { coords = { x = x, y = y }, kind = Types.Intersection }
+      points = Dict.toList nodeMap |> List.map (\ (s, i) -> { id = i, label = makePoint s })
+
+      makeEdge (p1, p2) =
+        let from = Dict.get p1 nodeMap |> Helpers.getOrFail "Edge from deleted node!"
+            to = Dict.get p2 nodeMap |> Helpers.getOrFail "Edge from deleted node!"
+            length = dist p1 p2
+        in
+          { to = to, from = from, label = { length = length, agents = [] } }
+      edges = Set.toList state.edges |> List.map makeEdge
+  in
+    Graph.fromNodesAndEdges points edges
 
 main =
   let onGrid forms = (grid 50 1500 1000)::forms

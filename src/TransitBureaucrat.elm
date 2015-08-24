@@ -26,16 +26,18 @@ updateStopOrder sd oldModel =
         newLevelData =
             case sd of
                 StopUp -> case oldLevelData.activeStopIdx of
-                    Just i -> { oldLevelData | stops <- moveIthMemberUp i oldLevelData.stops,
-                                               activeStopIdx <- Nothing,
-                                               changesRemaining <- (oldLevelData.changesRemaining - 1)
-                              }
+                    Just i -> if i > 0 
+                              then { oldLevelData | stops <- moveIthMemberUp i oldLevelData.stops,
+                                                    activeStopIdx <- Nothing,
+                                                    changesRemaining <- (oldLevelData.changesRemaining - 1) }
+                              else oldLevelData
                     Nothing -> oldLevelData
                 StopDown -> case oldLevelData.activeStopIdx of
-                    Just i -> { oldLevelData | stops <- moveIthMemberDown i oldLevelData.stops,
-                                               activeStopIdx <- Nothing,
-                                               changesRemaining <- (oldLevelData.changesRemaining - 1)
-                               }
+                    Just i -> if i < List.length oldLevelData.stops - 1
+                              then { oldLevelData | stops <- moveIthMemberDown i oldLevelData.stops,
+                                                    activeStopIdx <- Nothing,
+                                                     changesRemaining <- (oldLevelData.changesRemaining - 1) }
+                              else oldLevelData
                     Nothing -> oldLevelData
                 MakeActiveStopIndex i -> { oldLevelData | activeStopIdx <- Just i }
         in { oldModel | levelData <- newLevelData }

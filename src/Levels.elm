@@ -70,13 +70,13 @@ lvl2 busRoute =
       edge from to distance agents = Edge from to (Road distance agents)
 
       nodes = [
-        node 1 (0.0, 0.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.1}),
+        node 1 (0.0, 0.0) (BusStop {label = "C", currentlyWaiting = 0.0, waitingDelta = 0.1}),
         node 2 (1.0, 0.0) (CarSpawner {route = carRouteUp, interval = 20, nextIn = 0, startEdge = (2, 4)}),
-        node 3 (0.0, 1.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.2}),
+        node 3 (0.0, 1.0) (BusStop {label = "B", currentlyWaiting = 0.0, waitingDelta = 0.2}),
         node 4 (1.0, 1.0) (StopSign {delay = 8, currentDelay = 0.0}),
         node 5 (0.0, 2.0) (CarSpawner {route = carRouteDown, interval = 20, nextIn = 0, startEdge = (5, 3)}),
         node 6 (1.0, 2.0) Intersection,
-        node 7 (2.0, 2.0) (BusStop {currentlyWaiting = 0.0, waitingDelta = 0.1})
+        node 7 (2.0, 2.0) (BusStop {label = "A", currentlyWaiting = 0.0, waitingDelta = 0.1})
       ]
       
       edgesWithoutBuses = [

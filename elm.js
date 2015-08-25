@@ -19462,7 +19462,7 @@ Elm.Views.make = function (_elm) {
          var titleImage = A3($Graphics$Element.image,
          666,
          500,
-         "../game_logo.png");
+         "http://neunenak.github.io/assholetransitbureaucrat2015/game_logo.png");
          var titleBackgroundColor = A3($Color.rgb,
          94,
          5,

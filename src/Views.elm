@@ -181,13 +181,14 @@ busStopsWidget address model =
         stopButtons : List Html
         stopButtons = L.indexedMap stopButton stops
 
-    in Html.div []
+    in Html.div [style [("padding", "5px")]]
         [
-            Html.p [] [Html.text "Change bus stop order"],
-            Html.p [] [Html.text <| "Additional changes: " ++ (toString model.levelData.changesRemaining)],
+            Html.h2 [] [Html.text "Green Line Bus Route"],
             Html.div [style [("border", "1px solid black")]] stopButtons,
             Html.button [onClick address <| ChangeStopOrder StopUp] [Html.text "<"],
-            Html.button [onClick address <| ChangeStopOrder StopDown] [Html.text ">"]
+            Html.button [onClick address <| ChangeStopOrder StopDown] [Html.text ">"],
+            Html.p [] [Html.text <| "Use the buttons above to rearrange the bus schedule."],
+            Html.p [] [Html.text <| "You have " ++ (toString model.levelData.changesRemaining) ++ " change(s) remaining."]
         ]
 
 controlPane : List Html -> Html
@@ -283,8 +284,8 @@ trafficGrid model =
   in
     case ld.state of
       Types.State network metrics -> 
-        let -- networkGrid = RenderNetwork.renderNetwork ld.scalingFactor ld.coordScalingFactor ld.globalTransform network
-            networkGrid = RenderNetwork.render ld.scalingFactor ld.coordScalingFactor ld.globalTransform ld.state
+        let networkGrid = RenderNetwork.renderNetwork ld.scalingFactor ld.coordScalingFactor ld.globalTransform network
+            -- networkGrid = RenderNetwork.render ld.scalingFactor ld.coordScalingFactor ld.globalTransform ld.state
             indicators = G.flow G.right (List.map (renderIndicator metrics) ld.trackedMetrics)
         in 
           G.flow G.down [ indicators

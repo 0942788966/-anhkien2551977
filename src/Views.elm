@@ -38,7 +38,7 @@ renderTitleScreen : Address Action -> Html
 renderTitleScreen address =
         let
             titleBackgroundColor = Color.rgb 94 5 135
-            titleImage = G.image 666 500 "../game_logo.png"
+            titleImage = G.image 666 500 "http://neunenak.github.io/assholetransitbureaucrat2015/game_logo.png"
         in
             Html.div
                 []

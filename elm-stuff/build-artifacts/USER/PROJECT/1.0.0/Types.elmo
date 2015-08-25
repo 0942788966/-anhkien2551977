@@ -13,7 +13,6 @@ Elm.Types.make = function (_elm) {
    $Color = Elm.Color.make(_elm),
    $Dict = Elm.Dict.make(_elm),
    $Graph = Elm.Graph.make(_elm),
-   $IntDict = Elm.IntDict.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
@@ -57,7 +56,7 @@ Elm.Types.make = function (_elm) {
             return agent.totalDist;
             case "Car": return 0;}
          _U.badCase($moduleName,
-         "between lines 60 and 62");
+         "between lines 71 and 73");
       }();
    };
    var sizeOf = function (agent) {
@@ -67,7 +66,7 @@ Elm.Types.make = function (_elm) {
          {case "Bus": return 0.2;
             case "Car": return 0.16;}
          _U.badCase($moduleName,
-         "between lines 54 and 56");
+         "between lines 65 and 67");
       }();
    };
    var isBus = function (agent) {
@@ -77,9 +76,21 @@ Elm.Types.make = function (_elm) {
          {case "Bus": return true;
             case "Car": return false;}
          _U.badCase($moduleName,
-         "between lines 48 and 50");
+         "between lines 59 and 61");
       }();
    };
+   var TrackedMetric = F5(function (a,
+   b,
+   c,
+   d,
+   e) {
+      return {_: {}
+             ,displayName: a
+             ,isBadWhen: c
+             ,max: e
+             ,metricName: b
+             ,min: d};
+   });
    var Car = function (a) {
       return {ctor: "Car",_0: a};
    };
@@ -143,6 +154,7 @@ Elm.Types.make = function (_elm) {
                        ,Agent: Agent
                        ,Bus: Bus
                        ,Car: Car
+                       ,TrackedMetric: TrackedMetric
                        ,isBus: isBus
                        ,sizeOf: sizeOf
                        ,busDistanceTravelled: busDistanceTravelled

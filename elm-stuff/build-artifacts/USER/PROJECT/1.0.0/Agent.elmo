@@ -10,15 +10,16 @@ Elm.Agent.make = function (_elm) {
    _L = _N.List.make(_elm),
    $moduleName = "Agent",
    $Basics = Elm.Basics.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
    $Graph = Elm.Graph.make(_elm),
    $Helpers = Elm.Helpers.make(_elm),
-   $IntDict = Elm.IntDict.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Types = Elm.Types.make(_elm);
-   var changeEdge = F2(function (agent,
+   var changeEdge = F3(function (agent,
+   from,
    nid) {
       return function () {
          var _v0 = agent.kind;
@@ -30,15 +31,17 @@ Elm.Agent.make = function (_elm) {
               $Basics.toString(nid),
               A2($Basics._op["++"],
               " in ",
-              $Basics.toString($IntDict.toList(_v0._0))))))(A2($IntDict.get,
-              nid,
+              $Basics.toString($Dict.toList(_v0._0))))))(A2($Dict.get,
+              {ctor: "_Tuple2"
+              ,_0: from
+              ,_1: nid},
               _v0._0));
             case "Car":
-            return $Maybe.withDefault(10000)(A2($IntDict.get,
+            return $Maybe.withDefault(10000)(A2($Dict.get,
               nid,
               _v0._0));}
          _U.badCase($moduleName,
-         "between lines 18 and 20");
+         "between lines 20 and 22");
       }();
    });
    var translate = F2(function (agent,
@@ -72,8 +75,9 @@ Elm.Agent.make = function (_elm) {
             return {ctor: "_Tuple2"
                    ,_0: {ctor: "_Tuple2"
                         ,_0: ctx.node.id
-                        ,_1: A2(changeEdge,
+                        ,_1: A3(changeEdge,
                         agent,
+                        from,
                         ctx.node.id)}
                    ,_1: _U.replace([["travelled"
                                     ,remainder]

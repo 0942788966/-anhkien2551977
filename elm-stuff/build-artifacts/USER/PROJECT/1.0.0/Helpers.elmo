@@ -9,58 +9,111 @@ Elm.Helpers.make = function (_elm) {
    _U = _N.Utils.make(_elm),
    _L = _N.List.make(_elm),
    $moduleName = "Helpers",
+   $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
    $Graph = Elm.Graph.make(_elm),
-   $Graph$Tree = Elm.Graph.Tree.make(_elm),
-   $IntDict = Elm.IntDict.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Types = Elm.Types.make(_elm);
-   var findPathInTree = F2(function (goalId,
-   tree) {
+   var moveIthMemberUp = F2(function (i,
+   ls) {
       return function () {
-         var _v0 = $Graph$Tree.root(tree);
-         switch (_v0.ctor)
-         {case "Just":
-            switch (_v0._0.ctor)
-              {case "_Tuple2":
-                 return _U.eq(_v0._0._0.node.id,
-                   goalId) ? $Maybe.Just(_L.fromArray([goalId])) : function () {
-                      var paths = A2($List.filterMap,
-                      findPathInTree(goalId),
-                      _v0._0._1);
-                      return $Maybe.map(function (lst) {
-                         return A2($List._op["::"],
-                         _v0._0._0.node.id,
-                         lst);
-                      })($List.head(paths));
-                   }();}
-              break;
-            case "Nothing":
-            return $Maybe.Nothing;}
-         _U.badCase($moduleName,
-         "between lines 47 and 54");
+         var end = A2($List.drop,
+         i + 1,
+         ls);
+         var beginning = A2($List.take,
+         i - 1,
+         ls);
+         var ar = $Array.fromList(ls);
+         var elem = A2($Array.get,i,ar);
+         var prevElem = A2($Array.get,
+         i - 1,
+         ar);
+         return function () {
+            var _v0 = {ctor: "_Tuple2"
+                      ,_0: elem
+                      ,_1: prevElem};
+            switch (_v0.ctor)
+            {case "_Tuple2":
+               switch (_v0._0.ctor)
+                 {case "Just":
+                    switch (_v0._1.ctor)
+                      {case "Just":
+                         return A2($Basics._op["++"],
+                           beginning,
+                           A2($Basics._op["++"],
+                           _L.fromArray([_v0._0._0]),
+                           A2($Basics._op["++"],
+                           _L.fromArray([_v0._1._0]),
+                           end)));}
+                      break;}
+                 break;}
+            return ls;
+         }();
       }();
    });
-   var addCoords = F2(function (_v4,
-   _v5) {
+   var moveIthMemberDown = F2(function (i,
+   ls) {
       return function () {
-         switch (_v5.ctor)
+         var end = A2($List.drop,
+         i + 2,
+         ls);
+         var beginning = A2($List.take,
+         i,
+         ls);
+         var ar = $Array.fromList(ls);
+         var elem = A2($Array.get,i,ar);
+         var nextElem = A2($Array.get,
+         i + 1,
+         ar);
+         return function () {
+            var _v5 = {ctor: "_Tuple2"
+                      ,_0: elem
+                      ,_1: nextElem};
+            switch (_v5.ctor)
+            {case "_Tuple2":
+               switch (_v5._0.ctor)
+                 {case "Just":
+                    switch (_v5._1.ctor)
+                      {case "Just":
+                         return A2($Basics._op["++"],
+                           beginning,
+                           A2($Basics._op["++"],
+                           _L.fromArray([_v5._1._0]),
+                           A2($Basics._op["++"],
+                           _L.fromArray([_v5._0._0]),
+                           end)));}
+                      break;}
+                 break;}
+            return ls;
+         }();
+      }();
+   });
+   var Dict = F2(function (a,b) {
+      return {ctor: "Dict"
+             ,_0: a
+             ,_1: b};
+   });
+   var addCoords = F2(function (_v10,
+   _v11) {
+      return function () {
+         switch (_v11.ctor)
          {case "_Tuple2":
             return function () {
-                 switch (_v4.ctor)
+                 switch (_v10.ctor)
                  {case "_Tuple2":
                     return {ctor: "_Tuple2"
-                           ,_0: _v4._0 + _v5._0
-                           ,_1: _v4._1 + _v5._1};}
+                           ,_0: _v10._0 + _v11._0
+                           ,_1: _v10._1 + _v11._1};}
                  _U.badCase($moduleName,
-                 "on line 35, column 30 to 42");
+                 "on line 38, column 30 to 42");
               }();}
          _U.badCase($moduleName,
-         "on line 35, column 30 to 42");
+         "on line 38, column 30 to 42");
       }();
    });
    var interpolate = F3(function (p1,
@@ -88,7 +141,7 @@ Elm.Helpers.make = function (_elm) {
       return function () {
          switch (x.ctor)
          {case "::":
-            return $IntDict.fromList(A3($List.map2,
+            return $Dict.fromList(A3($List.map2,
               F2(function (v0,v1) {
                  return {ctor: "_Tuple2"
                         ,_0: v0
@@ -98,10 +151,9 @@ Elm.Helpers.make = function (_elm) {
               x._0,
               x._1)),
               x._1));
-            case "[]":
-            return $IntDict.empty;}
+            case "[]": return $Dict.empty;}
          _U.badCase($moduleName,
-         "between lines 71 and 73");
+         "between lines 78 and 80");
       }();
    };
    var getOrFail = F2(function (ex,
@@ -112,24 +164,69 @@ Elm.Helpers.make = function (_elm) {
             case "Nothing":
             return $Debug.crash(ex);}
          _U.badCase($moduleName,
-         "between lines 13 and 15");
+         "between lines 16 and 18");
+      }();
+   });
+   var findAllPaths = F2(function (net,
+   startId) {
+      return function () {
+         var bfsVisitor = F3(function (ctxs,
+         depth,
+         acc) {
+            return function () {
+               var nodeIds = A2($List.map,
+               function (ctx) {
+                  return ctx.node.id;
+               },
+               ctxs);
+               var currentNodeId = getOrFail("unknown nodeId")($List.head(nodeIds));
+               return function () {
+                  var _v23 = A2($Dict.get,
+                  currentNodeId,
+                  acc);
+                  switch (_v23.ctor)
+                  {case "Just":
+                     return _U.cmp($List.length(_v23._0),
+                       $List.length(nodeIds)) > 0 ? A3($Dict.insert,
+                       currentNodeId,
+                       $List.reverse(nodeIds),
+                       acc) : acc;
+                     case "Nothing":
+                     return A3($Dict.insert,
+                       currentNodeId,
+                       $List.reverse(nodeIds),
+                       acc);}
+                  _U.badCase($moduleName,
+                  "between lines 55 and 61");
+               }();
+            }();
+         });
+         var $ = A5($Graph.guidedBfs,
+         $Graph.alongOutgoingEdges,
+         bfsVisitor,
+         _L.fromArray([startId]),
+         $Dict.empty,
+         net),
+         results = $._0,
+         graph = $._1;
+         return results;
       }();
    });
    var findPath = F2(function (net,
-   _v17) {
+   _v25) {
       return function () {
-         switch (_v17.ctor)
+         switch (_v25.ctor)
          {case "_Tuple2":
             return function () {
-                 var dfsTree = A2($Graph.dfsTree,
-                 _v17._0,
-                 net);
-                 return getOrFail("couldn\'t find path!")(A2(findPathInTree,
-                 _v17._1,
-                 dfsTree));
+                 var paths = A2(findAllPaths,
+                 net,
+                 _v25._0);
+                 return getOrFail("couldn\'t find path!")(A2($Dict.get,
+                 _v25._1,
+                 paths));
               }();}
          _U.badCase($moduleName,
-         "between lines 41 and 43");
+         "between lines 46 and 48");
       }();
    });
    var busRouteFromList = F2(function (x,
@@ -153,23 +250,41 @@ Elm.Helpers.make = function (_elm) {
                  var combinedList = A2($List.concatMap,
                  $List.drop(1),
                  subroutes);
-                 var first = getOrFail("")($List.head(combinedList));
-                 var rest = getOrFail("")($List.tail(combinedList));
-                 return $IntDict.fromList(A3($List.map2,
-                 F2(function (v0,v1) {
-                    return {ctor: "_Tuple2"
-                           ,_0: v0
-                           ,_1: v1};
-                 }),
-                 combinedList,
-                 A2($Basics._op["++"],
-                 rest,
-                 _L.fromArray([first]))));
+                 return function () {
+                    switch (combinedList.ctor)
+                    {case "::":
+                       switch (combinedList._1.ctor)
+                         {case "::":
+                            return $Dict.fromList(A4($List.map3,
+                              F3(function (a,b,c) {
+                                 return {ctor: "_Tuple2"
+                                        ,_0: {ctor: "_Tuple2"
+                                             ,_0: a
+                                             ,_1: b}
+                                        ,_1: c};
+                              }),
+                              A2($List._op["::"],
+                              combinedList._0,
+                              A2($List._op["::"],
+                              combinedList._1._0,
+                              combinedList._1._1)),
+                              A2($List._op["::"],
+                              combinedList._1._0,
+                              A2($Basics._op["++"],
+                              combinedList._1._1,
+                              _L.fromArray([combinedList._0]))),
+                              A2($Basics._op["++"],
+                              combinedList._1._1,
+                              _L.fromArray([combinedList._0
+                                           ,combinedList._1._0]))));}
+                         break;}
+                    _U.badCase($moduleName,
+                    "between lines 73 and 75");
+                 }();
               }();
-            case "[]":
-            return $IntDict.empty;}
+            case "[]": return $Dict.empty;}
          _U.badCase($moduleName,
-         "between lines 59 and 68");
+         "between lines 67 and 75");
       }();
    });
    _elm.Helpers.values = {_op: _op
@@ -179,9 +294,12 @@ Elm.Helpers.make = function (_elm) {
                          ,dist: dist
                          ,interpolate: interpolate
                          ,addCoords: addCoords
+                         ,Dict: Dict
                          ,findPath: findPath
-                         ,findPathInTree: findPathInTree
+                         ,findAllPaths: findAllPaths
                          ,busRouteFromList: busRouteFromList
-                         ,carRouteFromList: carRouteFromList};
+                         ,carRouteFromList: carRouteFromList
+                         ,moveIthMemberDown: moveIthMemberDown
+                         ,moveIthMemberUp: moveIthMemberUp};
    return _elm.Helpers.values;
 };

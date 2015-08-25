@@ -12,7 +12,7 @@ import Types exposing (..)
 import Helpers exposing (..)
 
 size : Float
-size = 3.5
+size = 3
 
 roadStyle : GC.LineStyle
 roadStyle = let def = GC.defaultLine in
@@ -37,8 +37,8 @@ agentPositions network =
       in List.map (\a -> (interpolate fromCoords toCoords (a.travelled / length), a, angle)) agents
   in (List.concatMap go <| Graph.edges network)
 
-loc : Coords -> (Float, Float)
-loc n = (size * 50 * n.x, size * 50 * n.y)
+loc : Float -> Coords -> (Float, Float)
+loc scale n = (size * scale * n.x, size * scale * n.y)
 
 getNodes : Network -> Edge Road -> Maybe (Coords, Coords)
 getNodes net edge = 
@@ -46,53 +46,61 @@ getNodes net edge =
     (Just x, Just y) -> Just (x.node.label.coords, y.node.label.coords)
     _                -> Nothing
 
-renderAgent : (Coords, Agent, Float) -> Form
-renderAgent (coords, agent, angle) =
+renderAgent : Float -> (Coords, Agent, Float) -> Form
+renderAgent coordsScale (coords, agent, angle) =
     let
         renderedSize =
             case agent.kind of
                 Bus _ -> 25
                 Car _ -> 20
     in
-        GC.rotate angle <| GC.move (loc coords) <| GC.filled agent.color <| GC.rect renderedSize 12
+        GC.rotate angle <| GC.move (loc coordsScale coords) <| GC.filled agent.color <| GC.rect renderedSize 12
 
-renderPoint : Point -> Form
-renderPoint point =
+renderPoint : Float -> Point -> Form
+renderPoint coordsScale point =
   case point.kind of 
     BusStop props  -> let crowdSize = max 2 <| min 20 (sqrt props.currentlyWaiting * 2)
                           crowdCircle = GC.filled Color.lightBlue <| GC.circle crowdSize
                           busSign = GC.group [ GC.traced GC.defaultLine <| GC.segment (0,0) (-20,50)
                                              , GC.move (-20,50) <| GC.filled Color.yellow <| GC.circle 15
-                                             , GC.rotate (degrees 22.5) <| GC.move (-20,50) <| GC.text <| Text.fromString "BUS"
+                                             , GC.rotate (degrees 22.5) <| GC.move (-24,59) <| GC.text <| Text.height 8 <| Text.fromString "BUS"
+                                             , GC.rotate (degrees 22.5) <| GC.move (-19,48) <| GC.text <| Text.height 20 <| Text.fromString props.label
                                              ]
                       in
-                        GC.move (addCoords (-size*5,size*5) (loc point.coords)) <| GC.group [crowdCircle, busSign]
+                        GC.move (addCoords (-size*5,size*5) (loc coordsScale point.coords)) <| GC.group [crowdCircle, busSign]
     StopSign props -> GC.group [ GC.traced GC.defaultLine <| GC.segment (0,0) (-20,50)
                                , GC.move (-20,50) <| GC.filled Color.red <| GC.ngon 8 15
-                               ] |> GC.move (addCoords (-size*5,size*5) (loc point.coords))
+                               ] |> GC.move (addCoords (-size*5,size*5) (loc coordsScale point.coords))
     _              -> GC.toForm Element.empty
 
-renderNetwork : Network -> Element
-renderNetwork net =
+renderRoad : Float -> (Coords, Coords) -> Form
+renderRoad coordsScale (n1, n2) =
+  let segment = GC.segment (loc coordsScale n1) (loc coordsScale n2)
+
+      mainRoad = GC.traced roadStyle segment
+      divider = GC.traced medianStyle segment
+  in (GC.group [mainRoad, divider])
+
+renderNetwork : Float -> Float -> (Float, Float) -> Network -> Element
+renderNetwork scale coordsScale globalTransform net =
   let
     points = Graph.nodes net |> List.map .label
     edgeNodePairs = Graph.edges net |> List.filterMap (getNodes net)
-    edgeLines = List.map (\ (n1, n2) -> GC.segment (loc n1) (loc n2)) edgeNodePairs
 
-    busStops = List.map renderPoint points
-    roads = List.map (GC.traced roadStyle) edgeLines
-    lines = List.map (GC.traced medianStyle) edgeLines
-    agents = List.map renderAgent (agentPositions net)
+    pointLabels = List.map (\n -> GC.move (loc coordsScale n.label.coords) <| GC.text <| Text.color Color.white <| Text.fromString <| toString n.id) (Graph.nodes net)
+
+    roads = List.map (renderRoad coordsScale) edgeNodePairs
+    busStops = List.map (renderPoint coordsScale) points
+    agents = List.map (renderAgent coordsScale) (agentPositions net)
         
-    globalTransform = (-200.0, -100.0)
-    mapGroup = GC.move globalTransform (GC.group <| roads ++ lines ++ busStops ++ agents)
+    mapGroup = GC.move globalTransform (GC.group <| roads ++ busStops ++ agents {- ++ pointLabels-} )
   in
-    GC.collage 1000 800 <| [mapGroup]
+    GC.collage 1000 800 <| [GC.scale scale mapGroup]
 
-render : State -> Element
-render (State network metrics) =
+render : Float -> Float -> (Float, Float) -> State -> Element
+render scale coordsScale globalTransform (State network metrics) =
   flow down [ show ("Avg bus speed = " ++ toString (Dict.get "avgBusSpeed" metrics |> Maybe.withDefault 0)) 
             , show ("Avg congestion = " ++ toString (Dict.get "avgCongestion" metrics |> Maybe.withDefault 0)) 
             , show ("Avg waiting passengers = " ++ toString (Dict.get "avgWaiting" metrics |> Maybe.withDefault 0)) 
-            , renderNetwork network
+            , renderNetwork scale coordsScale globalTransform network
             ]

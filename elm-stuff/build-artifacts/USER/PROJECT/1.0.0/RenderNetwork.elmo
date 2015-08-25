@@ -90,7 +90,7 @@ Elm.RenderNetwork.make = function (_elm) {
          return $List.concatMap(go)($Graph.edges(network));
       }();
    };
-   var size = 3.5;
+   var size = 3;
    var roadStyle = function () {
       var def = $Graphics$Collage.defaultLine;
       return _U.replace([["width"
@@ -110,12 +110,14 @@ Elm.RenderNetwork.make = function (_elm) {
                                        ,4 * $Basics.round(size)])]],
       def);
    }();
-   var loc = function (n) {
+   var loc = F2(function (scale,
+   n) {
       return {ctor: "_Tuple2"
-             ,_0: size * 50 * n.x
-             ,_1: size * 50 * n.y};
-   };
-   var renderAgent = function (_v5) {
+             ,_0: size * scale * n.x
+             ,_1: size * scale * n.y};
+   });
+   var renderAgent = F2(function (coordsScale,
+   _v5) {
       return function () {
          switch (_v5.ctor)
          {case "_Tuple3":
@@ -128,18 +130,43 @@ Elm.RenderNetwork.make = function (_elm) {
                     _U.badCase($moduleName,
                     "between lines 53 and 56");
                  }();
-                 return $Graphics$Collage.rotate(_v5._2)($Graphics$Collage.move(loc(_v5._0))($Graphics$Collage.filled(_v5._1.color)(A2($Graphics$Collage.rect,
+                 return $Graphics$Collage.rotate(_v5._2)($Graphics$Collage.move(A2(loc,
+                 coordsScale,
+                 _v5._0))($Graphics$Collage.filled(_v5._1.color)(A2($Graphics$Collage.rect,
                  renderedSize,
                  12))));
               }();}
          _U.badCase($moduleName,
          "between lines 51 and 57");
       }();
-   };
-   var renderPoint = function (point) {
+   });
+   var renderRoad = F2(function (coordsScale,
+   _v13) {
       return function () {
-         var _v13 = point.kind;
          switch (_v13.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var segment = A2($Graphics$Collage.segment,
+                 A2(loc,coordsScale,_v13._0),
+                 A2(loc,coordsScale,_v13._1));
+                 var mainRoad = A2($Graphics$Collage.traced,
+                 roadStyle,
+                 segment);
+                 var divider = A2($Graphics$Collage.traced,
+                 medianStyle,
+                 segment);
+                 return $Graphics$Collage.group(_L.fromArray([mainRoad
+                                                             ,divider]));
+              }();}
+         _U.badCase($moduleName,
+         "between lines 78 and 82");
+      }();
+   });
+   var renderPoint = F2(function (coordsScale,
+   point) {
+      return function () {
+         var _v17 = point.kind;
+         switch (_v17.ctor)
          {case "BusStop":
             return function () {
                  var busSign = $Graphics$Collage.group(_L.fromArray([$Graphics$Collage.traced($Graphics$Collage.defaultLine)(A2($Graphics$Collage.segment,
@@ -153,88 +180,89 @@ Elm.RenderNetwork.make = function (_elm) {
                                                                                             ,_0: -20
                                                                                             ,_1: 50})($Graphics$Collage.filled($Color.yellow)($Graphics$Collage.circle(15)))
                                                                     ,$Graphics$Collage.rotate($Basics.degrees(22.5))($Graphics$Collage.move({ctor: "_Tuple2"
-                                                                                                                                            ,_0: -20
-                                                                                                                                            ,_1: 50})($Graphics$Collage.text($Text.fromString("BUS"))))]));
+                                                                                                                                            ,_0: -24
+                                                                                                                                            ,_1: 59})($Graphics$Collage.text($Text.height(8)($Text.fromString("BUS")))))
+                                                                    ,$Graphics$Collage.rotate($Basics.degrees(22.5))($Graphics$Collage.move({ctor: "_Tuple2"
+                                                                                                                                            ,_0: -19
+                                                                                                                                            ,_1: 48})($Graphics$Collage.text($Text.height(20)($Text.fromString(_v17._0.label)))))]));
                  var crowdSize = $Basics.max(2)(A2($Basics.min,
                  20,
-                 $Basics.sqrt(_v13._0.currentlyWaiting) * 2));
+                 $Basics.sqrt(_v17._0.currentlyWaiting) * 2));
                  var crowdCircle = $Graphics$Collage.filled($Color.lightBlue)($Graphics$Collage.circle(crowdSize));
                  return $Graphics$Collage.move(A2($Helpers.addCoords,
                  {ctor: "_Tuple2"
                  ,_0: (0 - size) * 5
                  ,_1: size * 5},
-                 loc(point.coords)))($Graphics$Collage.group(_L.fromArray([crowdCircle
-                                                                          ,busSign])));
+                 A2(loc,
+                 coordsScale,
+                 point.coords)))($Graphics$Collage.group(_L.fromArray([crowdCircle
+                                                                      ,busSign])));
               }();
             case "StopSign":
             return $Graphics$Collage.move(A2($Helpers.addCoords,
               {ctor: "_Tuple2"
               ,_0: (0 - size) * 5
               ,_1: size * 5},
-              loc(point.coords)))($Graphics$Collage.group(_L.fromArray([$Graphics$Collage.traced($Graphics$Collage.defaultLine)(A2($Graphics$Collage.segment,
-                                                                       {ctor: "_Tuple2"
-                                                                       ,_0: 0
-                                                                       ,_1: 0},
-                                                                       {ctor: "_Tuple2"
-                                                                       ,_0: -20
-                                                                       ,_1: 50}))
-                                                                       ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                                                               ,_0: -20
-                                                                                               ,_1: 50})($Graphics$Collage.filled($Color.red)(A2($Graphics$Collage.ngon,
-                                                                       8,
-                                                                       15)))])));}
+              A2(loc,
+              coordsScale,
+              point.coords)))($Graphics$Collage.group(_L.fromArray([$Graphics$Collage.traced($Graphics$Collage.defaultLine)(A2($Graphics$Collage.segment,
+                                                                   {ctor: "_Tuple2"
+                                                                   ,_0: 0
+                                                                   ,_1: 0},
+                                                                   {ctor: "_Tuple2"
+                                                                   ,_0: -20
+                                                                   ,_1: 50}))
+                                                                   ,$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                                           ,_0: -20
+                                                                                           ,_1: 50})($Graphics$Collage.filled($Color.red)(A2($Graphics$Collage.ngon,
+                                                                   8,
+                                                                   15)))])));}
          return $Graphics$Collage.toForm($Graphics$Element.empty);
       }();
-   };
-   var renderNetwork = function (net) {
+   });
+   var renderNetwork = F4(function (scale,
+   coordsScale,
+   globalTransform,
+   net) {
       return function () {
-         var globalTransform = {ctor: "_Tuple2"
-                               ,_0: -200.0
-                               ,_1: -100.0};
          var agents = A2($List.map,
-         renderAgent,
+         renderAgent(coordsScale),
          agentPositions(net));
-         var edgeNodePairs = $List.filterMap(getNodes(net))($Graph.edges(net));
-         var edgeLines = A2($List.map,
-         function (_v16) {
-            return function () {
-               switch (_v16.ctor)
-               {case "_Tuple2":
-                  return A2($Graphics$Collage.segment,
-                    loc(_v16._0),
-                    loc(_v16._1));}
-               _U.badCase($moduleName,
-               "on line 80, column 41 to 68");
-            }();
+         var pointLabels = A2($List.map,
+         function (n) {
+            return $Graphics$Collage.move(A2(loc,
+            coordsScale,
+            n.label.coords))($Graphics$Collage.text($Text.color($Color.white)($Text.fromString($Basics.toString(n.id)))));
          },
-         edgeNodePairs);
+         $Graph.nodes(net));
+         var edgeNodePairs = $List.filterMap(getNodes(net))($Graph.edges(net));
          var roads = A2($List.map,
-         $Graphics$Collage.traced(roadStyle),
-         edgeLines);
-         var lines = A2($List.map,
-         $Graphics$Collage.traced(medianStyle),
-         edgeLines);
+         renderRoad(coordsScale),
+         edgeNodePairs);
          var points = $List.map(function (_) {
             return _.label;
          })($Graph.nodes(net));
          var busStops = A2($List.map,
-         renderPoint,
+         renderPoint(coordsScale),
          points);
          var mapGroup = A2($Graphics$Collage.move,
          globalTransform,
          $Graphics$Collage.group(A2($Basics._op["++"],
          roads,
          A2($Basics._op["++"],
-         lines,
-         A2($Basics._op["++"],
          busStops,
-         agents)))));
+         agents))));
          return A2($Graphics$Collage.collage,
          1000,
-         800)(_L.fromArray([mapGroup]));
+         800)(_L.fromArray([A2($Graphics$Collage.scale,
+         scale,
+         mapGroup)]));
       }();
-   };
-   var render = function (_v20) {
+   });
+   var render = F4(function (scale,
+   coordsScale,
+   globalTransform,
+   _v20) {
       return function () {
          switch (_v20.ctor)
          {case "State":
@@ -255,11 +283,15 @@ Elm.RenderNetwork.make = function (_elm) {
                            $Basics.toString($Maybe.withDefault(0)(A2($Dict.get,
                            "avgWaiting",
                            _v20._1)))))
-                           ,renderNetwork(_v20._0)]));}
+                           ,A4(renderNetwork,
+                           scale,
+                           coordsScale,
+                           globalTransform,
+                           _v20._0)]));}
          _U.badCase($moduleName,
-         "between lines 94 and 98");
+         "between lines 102 and 106");
       }();
-   };
+   });
    _elm.RenderNetwork.values = {_op: _op
                                ,size: size
                                ,roadStyle: roadStyle
@@ -269,6 +301,7 @@ Elm.RenderNetwork.make = function (_elm) {
                                ,getNodes: getNodes
                                ,renderAgent: renderAgent
                                ,renderPoint: renderPoint
+                               ,renderRoad: renderRoad
                                ,renderNetwork: renderNetwork
                                ,render: render};
    return _elm.RenderNetwork.values;

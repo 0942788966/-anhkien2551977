@@ -1,6 +1,5 @@
 module Views where
 
-import DraggableForm
 import Html exposing (Html)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (style)
@@ -9,11 +8,13 @@ import Graphics.Element as G
 import Graphics.Collage exposing (..)
 import Text as T
 import List as L
+import Dict
 import Color
 import Array
 import Debug
 import RenderNetwork
 
+import Helpers exposing (getOrFail)
 import Types
 import EmailTexts exposing (emailTexts)
 import GameScreens exposing (..)
@@ -37,7 +38,7 @@ renderTitleScreen : Address Action -> Html
 renderTitleScreen address =
         let
             titleBackgroundColor = Color.rgb 94 5 135
-            titleImage = G.image 800 600 "../game_logo.png"
+            titleImage = G.image 666 500 "../game_logo.png"
         in
             Html.div
                 []
@@ -61,7 +62,7 @@ renderChooseLevel address model =
             Html.div [style [("color", "white"),
                              ("background-color", "rgb(94, 5, 135"),
                              ("width", "800px"),
-                             ("height", "600px")]
+                             ("height", "500px")]
                      ] 
             [
                 Html.text "Choose a level" ,
@@ -79,7 +80,8 @@ renderMessageScreen n address = case Array.get n emailTexts of
                         ("background-color", levelBackgroundCss),
                         ("position", "absolute"),
                         ("width", "100%"),
-                        ("height", "100%")
+                        ("height", "100%"),
+                        ("margin", "0")
                     ]
                   ]
              [
@@ -92,7 +94,7 @@ renderMessageScreen n address = case Array.get n emailTexts of
                     ]
                     [
                         emailTemplate emailText,
-                        gameButton address (GoToScreen <| LevelScreen 0) "Begin workday..."
+                        gameButton address (GoToScreen <| LevelScreen n) "Begin workday..."
                     ]
              ]
 
@@ -109,7 +111,7 @@ emailTemplate msg =
                 [("backgroundColor", "rgb(94,5,135"),
                  boxShadowCss,
                  ("width", "800px"),
-                 ("height", "600px"),
+                 ("height", "500px"),
                  ("color", "white"),
                  ("padding", "5px")
                 ]
@@ -134,36 +136,59 @@ renderLevel levelNum address model =
                 [("background-color", levelBackgroundCss),
                  ("position", "absolute"),
                  ("width", "100%"),
-                 ("height", "100%")
+                 ("height", "100%"),
+                 ("margin", "0")
                 ]
              ]
     [
         Html.div []
         [
             controlPane [
-                gameButton address ResetTime "Reset",
                 gameButton address (GoToScreen TitleScreen) "Return to title",
-                gameButton address ToggleAdvancingTime "Toggle time",
-                busStopsWidget address model.levelData
+                gameButton address ToggleAdvancingTime "Play / Pause",
+                gameButton address ResetTime "Stop",
+                gameButton address ResetState "Reset",
+                busStopsWidget address model
                 ],
             gameClock model
         ],
 
-        Html.div [style [("position", "absolute"), ("right", "20px"), ("top", "10px")]]
-            --[Html.fromElement <| trafficGrid model]
+        Html.div [style [("position", "absolute"), ("left", "412px"), ("top", "10px")]]
             [Html.fromElement <| trafficGrid model]
     ]
 
-busStopsWidget : Address Action -> LevelData -> Html
-busStopsWidget address levelData =
+busStopsWidget : Address Action -> Model -> Html
+busStopsWidget address model =
     let
-        stops = levelData.stops
-        stopNames = L.map (\(BusStop name) -> name) stops
-    in Html.div []
+        stops = model.levelData.stops
+
+        stopButton : Int -> String -> Html
+        stopButton idx name =
+            let
+                bkgColor = case model.levelData.activeStopIdx of
+                    Just i -> if i == idx then "#ff0000" else "#ffffff"
+                    Nothing -> "#ffffff"
+            in
+            Html.button
+                [style [("border", "1px solid grey"),
+                        ("background-color", bkgColor)
+                       ],
+                 onClick address <| ChangeStopOrder (MakeActiveStopIndex idx)
+                ]
+
+                [Html.text name]
+
+        stopButtons : List Html
+        stopButtons = L.indexedMap stopButton stops
+
+    in Html.div [style [("padding", "5px")]]
         [
-            Html.p [] [Html.text "Stop order"],
-            Html.fromElement <| G.flow G.down
-                (L.map (\x -> G.leftAligned (T.fromString x)) stopNames)
+            Html.h2 [] [Html.text "Green Line Bus Route"],
+            Html.div [style [("border", "1px solid black")]] stopButtons,
+            Html.button [onClick address <| ChangeStopOrder StopUp] [Html.text "<"],
+            Html.button [onClick address <| ChangeStopOrder StopDown] [Html.text ">"],
+            Html.p [] [Html.text <| "Use the buttons above to rearrange the bus schedule."],
+            Html.p [] [Html.text <| "You have " ++ (toString model.levelData.changesRemaining) ++ " change(s) remaining."]
         ]
 
 controlPane : List Html -> Html
@@ -171,7 +196,7 @@ controlPane contents =
    let styleAttrs = [("position", "absolute"),
                      boxShadowCss,
                      ("width", "400px"),
-                     ("height", "500px"),
+                     ("height", "400px"),
                      ("left", "10px"),
                      ("top", "10px"),
                      whiteBackgroundCss
@@ -185,7 +210,7 @@ gameClock model =
                         ("position", "absolute"),
                         boxShadowCss,
                         ("left", "100px"),
-                        ("top", "520px"),
+                        ("top", "420px"),
                         ("width", "300px"),
                         ("height", "200px"),
                         whiteBackgroundCss
@@ -211,18 +236,18 @@ gameClock model =
                ]
 
         clockCollage =
-            let 
+            let
                 timeInMin t = toFloat ((\(GameTime n) -> n) t)
                 hand len time =
                    let
                        angle = degrees (90 - 6 * time)
-                   in 
+                   in
                       segment (0,0) (fromPolar (len, angle))
                 hourHand t = hand 50 (t/12) |> traced (solid Color.charcoal)
                 minuteHand t = hand 90 t |> traced (solid Color.orange)
             in
                 collage 200 200
-                    [ 
+                    [
                         filled Color.lightGrey (ngon 30 90),
                         outlined (solid Color.grey) (ngon 30 90),
                         hourHand <| timeInMin model.time,
@@ -232,8 +257,38 @@ gameClock model =
        Html.div [style styleAttrs]
        [Html.fromElement <| G.flow G.right [clockCollage, timeDisplay model.time]]
 
+renderIndicator : Types.Metrics -> Types.TrackedMetric -> G.Element
+renderIndicator metrics trackedMetric = 
+  case Dict.get trackedMetric.metricName metrics of
+    Just value -> 
+      let name = G.leftAligned <| T.fromString (" " ++ trackedMetric.displayName ++ " : ")
+          
+          color = if trackedMetric.isBadWhen value
+                  then Color.red
+                  else Color.green
+          width = 100
+          height = 20
+          pos = (value - trackedMetric.min) / (trackedMetric.max - trackedMetric.min) * width
+
+          indicatorFrame = rect width height |> outlined { defaultLine | color <- color }
+          indicatorBody = rect pos height |> filled color
+
+          indicator = collage width height [indicatorBody, indicatorFrame]
+      in G.flow G.right [G.spacer 10 10, name, indicator, G.spacer 15 15]
+    Nothing -> G.spacer 100 20
+
+
 trafficGrid : Model -> G.Element
 trafficGrid model =
-   let network = (\(Types.State network _) -> network) model.network
-   in RenderNetwork.renderNetwork network
+  let ld = model.levelData
+  in
+    case ld.state of
+      Types.State network metrics -> 
+        let networkGrid = RenderNetwork.renderNetwork ld.scalingFactor ld.coordScalingFactor ld.globalTransform network
+            -- networkGrid = RenderNetwork.render ld.scalingFactor ld.coordScalingFactor ld.globalTransform ld.state
+            indicators = G.flow G.right (List.map (renderIndicator metrics) ld.trackedMetrics)
+        in 
+          G.flow G.down [ indicators
+                        , networkGrid 
+                        ]
 

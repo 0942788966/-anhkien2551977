@@ -1,14 +1,19 @@
 module LevelEditor where
 
 import Color
+import Dict
 import Debug
+import Graphics.Element exposing (flow, down, show)
 import Graphics.Collage as GC exposing (Form)
 import Keyboard
 import Mouse
 import Set exposing (Set)
 import Signal
 
-import RenderNetwork as Render
+import Graph exposing (Graph)
+
+import Types exposing (Network)
+import Helpers
 
 cellStyle : GC.LineStyle
 cellStyle = let def = GC.defaultLine in
@@ -66,7 +71,11 @@ type alias EditorState = {
   }
 
 addNode : (Int, Int) -> EditorState -> EditorState
-addNode node state = { state | nodes <- Set.insert node state.nodes }
+addNode node state =
+  let (x, y) = unconvert node in
+  if toFloat x < width && toFloat y < height
+  then { state | nodes <- Set.insert node state.nodes }
+  else state
 
 deleteNode : (Int, Int) -> EditorState -> EditorState
 deleteNode node state = { state | nodes <- Set.remove node state.nodes }
@@ -123,12 +132,45 @@ render state =
   in
     placeholders ++ selectedCircles ++ edges
 
+dist : (Float, Float) -> (Float, Float) -> Float
+dist (x1, y1) (x2, y2) = sqrt <| (x1 - x2)^2 + (y1 - y2)^2
+
+
+toNetwork : EditorState -> Network
+toNetwork state =
+  let wrapPoint (x, y) = (toFloat x, toFloat y)
+      nodes = Set.toList state.nodes |> List.map wrapPoint
+      nodeMap = Dict.fromList (List.map2 (\ i s -> (s, i)) [1..List.length nodes] nodes)
+
+      makePoint (x, y) = { coords = { x = x, y = y }, kind = Types.Intersection }
+      points = Dict.toList nodeMap |> List.map (\ (s, i) -> { id = i, label = makePoint s })
+
+      makeEdge (p1, p2) =
+        let from = Dict.get p1 nodeMap |> Helpers.getOrFail "Edge from deleted node!"
+            to = Dict.get p2 nodeMap |> Helpers.getOrFail "Edge from deleted node!"
+            length = dist p1 p2
+        in
+          { to = to, from = from, label = { length = length, agents = [] } }
+      wrapPoints ((x1, y1), (x2, y2)) = ((toFloat x1, toFloat y1), (toFloat x2, toFloat y2))
+      edges = Set.toList state.edges |> List.map (makeEdge << wrapPoints)
+  in
+    Graph.fromNodesAndEdges points edges |> Debug.watch "net"
+
+width = 1500
+height = 900
+cellSize = 50
+
+convert (x, y) = (x - width // 2, -(y - height // 2))
+unconvert (x, y) = (x + width // 2, -y + height // 2)
+
+toSummary network = (Graph.nodes network, Graph.edges network)
+
 main =
-  let onGrid forms = (grid 50 1500 1000)::forms
-      convert (x, y) = (x - 1500 // 2, -(y - 900 // 2))
+  let onGrid forms = (grid cellSize width height)::forms
+      convert (x, y) = (x - width // 2, -(y - height // 2))
       points = Signal.map (snapTo 50 << convert) Mouse.position
       clicked = Signal.sampleOn Mouse.clicks points
-      deletes = Signal.map deleteSelected <| Keyboard.isDown 46
+      deletes = Signal.map deleteSelected <| Signal.mergeMany [Keyboard.isDown 46, Keyboard.isDown 88]
 
       addingEdge = Signal.sampleOn clicked Keyboard.shift
       handleSelect addingEdge point state =
@@ -138,5 +180,8 @@ main =
       states = Signal.foldp (\ f s -> f s) emptyState changes
 
       shadows = Signal.map shadow points
+
+      net = Signal.map (show << toSummary << toNetwork) states
+      editor = Signal.map (GC.collage width height << onGrid << render) states
   in
-    Signal.map (GC.collage 1500 900 << onGrid << render) states
+    Signal.map2 (\ a b -> flow down [b, a]) net editor
